@@ -1,0 +1,61 @@
+# Streamlit Dark Theme Configuration
+# To use this dark theme, rename this file to config.toml (backup the light theme first)
+# This configuration provides a comfortable dark mode with excellent readability
+
+[theme]
+# Primary color - Vibrant cyan for interactive elements
+# Provides excellent visibility against dark backgrounds
+primaryColor = "#00D4FF"
+
+# Background color - Dark slate (not pure black) for reduced eye strain
+# #1A1F2E is easier on the eyes than pure black for extended viewing
+backgroundColor = "#1A1F2E"
+
+# Secondary background - Slightly lighter dark for visual hierarchy
+# Creates subtle depth without being distracting
+secondaryBackgroundColor = "#242B3D"
+
+# Text color - Off-white for comfortable reading
+# #E8EAED provides optimal contrast (13.3:1) without being harsh
+textColor = "#E8EAED"
+
+# Font selection - System fonts for consistency
+font = "sans serif"
+
+# Server Configuration
+[server]
+# Enable file watching for development
+fileWatcherType = "auto"
+
+# Browser Configuration
+[browser]
+# Gather usage statistics (set to false for privacy)
+gatherUsageStats = false
+
+# Runner Configuration
+[runner]
+# Magic commands configuration
+magicEnabled = true
+
+# Client Configuration
+[client]
+# Show error details in the browser
+showErrorDetails = true
+
+# Dark Theme Design Philosophy:
+#
+# This dark theme has been carefully crafted to:
+# 1. Reduce eye strain during extended use
+# 2. Maintain excellent readability for all text elements
+# 3. Ensure charts and visualizations remain clear
+# 4. Provide sufficient contrast for accessibility (WCAG AA compliant)
+#
+# Color Psychology:
+# - Dark Slate (#1A1F2E): Calming, professional base
+# - Cyan (#00D4FF): Energetic, modern accent for CTAs
+# - Off-white (#E8EAED): Soft, readable text that doesn't glare
+#
+# The theme avoids pure black (#000000) which can cause:
+# - Halation effects on OLED screens
+# - Excessive contrast that strains eyes
+# - Loss of depth perception in UI elements

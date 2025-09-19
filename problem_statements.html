@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Statements Excel Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 30px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .preview-table {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .description-cell {
+            max-width: 300px;
+            white-space: normal;    /* Allow wrapping */
+            overflow: visible;      /* Show all content */
+            text-overflow: unset;   /* Remove ellipsis */
+        }
+        .impact-cell {
+            max-width: 350px;
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+        }
+        .download-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+            display: block;
+            margin: 20px auto;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(17, 153, 142, 0.4);
+        }
+        .department-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Problem Statements Database</h1>
+            <p>Smart India Hackathon - Structured Problem Analysis</p>
+        </div>
+        
+        <div class="content">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Total Problems</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Different Departments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Technology Domains</div>
+                </div>
+            </div>
+
+            <button class="download-btn" onclick="downloadExcel()">
+                📊 Download Excel File
+            </button>
+
+            <div class="preview-table">
+                <table id="problemTable">
+                    <thead>
+                        <tr>
+                            <th>Problem ID</th>
+                            <th>Department</th>
+                            <th>Problem Title</th>
+                            <th>Description</th>
+                            <th>Target Audience</th>
+                            <th>Proposed Solution</th>
+                            <th>Expected Outcome</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const problemData = [
+            {
+                problemId: "PS001",
+                department: "Education Department",
+                title: "Rural School Attendance Automation",
+                description: "Many rural schools in India rely on manual attendance systems, which are time-consuming and prone to errors. Teachers spend significant time marking attendance, reducing instructional time. Additionally, inaccurate records can lead to discrepancies in government reporting for schemes like mid-day meals.",
+                targetAudience: "School administrators, Teachers, Students, Government education departments",
+                proposedSolution: "A low-cost, user-friendly software or mobile application that automates attendance using facial recognition or RFID-based systems with minimal infrastructure and training requirements.",
+                expectedOutcome: "Automated attendance system requiring minimal infrastructure and training for deployment in rural schools",
+                impact: "Affects over 50% of rural schools, impacting millions of students and teachers. Will save time, improve accuracy, and enhance resource allocation."
+            },
+            {
+                problemId: "PS002",
+                department: "Education Technology",
+                title: "Smart Attendance & Student Development System",
+                description: "Educational institutions depend on manual attendance systems and students waste free periods with unproductive activities. There's a gap in personalized learning support during idle classroom hours and lack of tools that integrate daily schedules with individual student planning.",
+                targetAudience: "Students, Teachers, College administrators, Career counselors, Education departments",
+                proposedSolution: "System that automatically marks attendance using QR code, Bluetooth/Wi-Fi proximity, or face recognition, displays real-time attendance, and suggests personalized academic tasks during free periods.",
+                expectedOutcome: "Automated attendance marking, real-time display, personalized task suggestions, and daily routine generation combining class schedule with personal goals",
+                impact: "Improves administrative efficiency, student development, productivity, goal clarity, and learning outcomes with better insight into student behavior."
+            },
+            {
+                problemId: "PS003",
+                department: "AYUSH Ministry",
+                title: "Blockchain-Based Ayurvedic Herb Traceability",
+                description: "The Ayurvedic herbal supply chain is fragmented with smallholder farmers and multiple intermediaries, leading to challenges in quality, authenticity, and sustainable sourcing. Variations in harvesting and manual record-keeping introduce risks of mislabeling and adulteration.",
+                targetAudience: "Farmers, Wild collectors, Processing facilities, Manufacturers, Consumers, Regulatory bodies",
+                proposedSolution: "Permissioned blockchain network with geo-tagged data capture, smart contracts for compliance, and consumer-facing QR code system for complete provenance tracking.",
+                expectedOutcome: "End-to-end traceability system with geo-tagged harvest events, automated compliance enforcement, and consumer transparency through QR codes",
+                impact: "Ensures authenticity, builds consumer trust, enables rapid recall management, and supports sustainable collection practices with premium pricing incentives."
+            },
+            {
+                problemId: "PS004",
+                department: "Higher Education Department",
+                title: "Fake Degree Detection System",
+                description: "Increasing digitization has led to problems with fake degrees and forged academic certificates becoming a major concern for institutions, employers, and government bodies. Current verification is manual, slow, and susceptible to corruption.",
+                targetAudience: "Higher education institutions, Employers, Government bodies, Students",
+                proposedSolution: "Digital platform using AI, OCR, and blockchain validation to authenticate documents, detect tampering, and cross-verify with institutional databases.",
+                expectedOutcome: "Smart certificate authenticity checker with OCR extraction, database matching, digital watermark support, and institution integration module",
+                impact: "Preserves academic integrity, prevents fraudulent document usage, and creates trustable publicly accessible verification system."
+            },
+            {
+                problemId: "PS005",
+                department: "Ministry of Corporate Affairs",
+                title: "AI-Powered eConsultation Analysis",
+                description: "eConsultation module receives substantial volume of comments on draft legislations with risk of observations being overlooked or inadequately analyzed. Manual review of individual submissions is time-consuming and prone to oversight.",
+                targetAudience: "MCA officials, Stakeholders, Legal experts, Policy makers",
+                proposedSolution: "AI model for sentiment analysis of stakeholder suggestions, summary generation, and word cloud visualization to systematically analyze all remarks.",
+                expectedOutcome: "Sentiment analysis, accurate summary generation, and word cloud visualization to reduce effort in analyzing high volume comments",
+                impact: "Ensures all stakeholder feedback is considered, improves policy-making process, and enhances transparency in legislative consultation."
+            },
+            {
+                problemId: "PS006",
+                department: "Department of Ocean Development",
+                title: "AI-Powered ARGO Oceanographic Data System",
+                description: "Oceanographic data from ARGO floats is vast, complex, and requires domain knowledge and technical skills to access. Current systems lack intuitive interfaces for non-technical users to query and visualize ocean data.",
+                targetAudience: "Ocean researchers, Policy makers, Students, Marine industry professionals",
+                proposedSolution: "AI-powered conversational system using RAG pipelines and multimodal LLMs to enable natural language querying of ARGO data with interactive dashboards.",
+                expectedOutcome: "End-to-end pipeline with relational and vector databases, LLM-powered natural language interface, and geospatial visualization dashboard",
+                impact: "Democratizes access to ocean data, enables non-technical users to extract insights, and supports marine research and decision-making."
+            },
+            {
+                problemId: "PS007",
+                department: "Education Department",
+                title: "Gamified STEM Learning Platform",
+                description: "Students in rural schools (grades 6-12) need enhanced learning outcomes in STEM subjects with limited internet connectivity and access to engaging educational content.",
+                targetAudience: "Rural school students (grades 6-12), Teachers, Education administrators",
+                proposedSolution: "Gamified digital platform with interactive games, multilingual content, and offline access for low-connectivity environments.",
+                expectedOutcome: "Mobile app or web platform increasing student engagement by 15% with teacher analytics and deployment on low-cost devices",
+                impact: "Enhances STEM education in rural areas, improves learning outcomes, and provides accessible educational technology."
+            },
+            {
+                problemId: "PS008",
+                department: "Legal Metrology Department",
+                title: "Smart Tamper Detection for Measuring Instruments",
+                description: "Weighing and measuring instruments face tampering issues leading to fraudulent practices. Current detection methods are inadequate for both physical and digital tampering in real-time.",
+                targetAudience: "Legal Metrology officers, Traders, Consumers, Regulatory bodies",
+                proposedSolution: "Intelligent system using AI/ML, IoT sensors, blockchain audit trails, and tamper-evident hardware seals for real-time detection and prevention.",
+                expectedOutcome: "Prototype device with tamper detection, regulatory dashboard, logging features, and validation from controlled scenarios",
+                impact: "Strengthens consumer protection, builds proactive regulatory ecosystem, reduces inspection burden, and contributes to digital trust in commerce."
+            },
+            {
+                problemId: "PS009",
+                department: "Central Ground Water Board",
+                title: "Rainwater Harvesting Feasibility App",
+                description: "Significant potential exists for rooftop rainwater harvesting, but there's no user-friendly digital platform for individuals to assess their harvesting potential despite available scientific manuals.",
+                targetAudience: "Individual property owners, Communities, Water conservation agencies",
+                proposedSolution: "Web/mobile application using GIS-based algorithmic models to estimate RTRWH feasibility based on user location and property details.",
+                expectedOutcome: "Feasibility assessment tool with structure recommendations, aquifer information, cost estimation, and regional language support",
+                impact: "Empowers individuals to make informed groundwater conservation decisions, enhances public awareness, and supports sustainable water management."
+            },
+            {
+                problemId: "PS010",
+                department: "Ministry of Coal/Mining",
+                title: "AI-Based Rockfall Prediction System",
+                description: "Rockfalls in open-pit mines pose significant threats with traditional detection systems being either labor-intensive or lacking real-time predictive capabilities.",
+                targetAudience: "Mine planners, Safety officers, Mining companies, Regulatory authorities",
+                proposedSolution: "Smart AI-based system processing multi-source data including DEM, drone imagery, sensor data, and environmental factors for predictive analytics.",
+                expectedOutcome: "Machine learning model with web/mobile dashboard, real-time risk maps, probability-based forecasts, and alert mechanisms",
+                impact: "Enables safer mining practices, reduces operational delays, prevents injuries, and provides cost-effective scalable solution."
+            },
+            {
+                problemId: "PS011",
+                department: "Sports Authority of India",
+                title: "Mobile Sports Talent Assessment Platform",
+                description: "Identifying athletic talent in India faces challenges with limited access to standardized assessment facilities, particularly in rural areas, hindering discovery of potential athletes.",
+                targetAudience: "Aspiring athletes, Sports coaches, SAI officials, Talent scouts",
+                proposedSolution: "Mobile app using AI/ML for video-based performance analysis of fitness tests with on-device verification and cheat detection.",
+                expectedOutcome: "Mobile application with AI modules for video analysis, secure backend system, and official dashboard for performance evaluation",
+                impact: "Democratizes sports talent assessment, reaches remote areas, provides low-cost scalable solution, and improves transparency in athlete discovery."
+            },
+            {
+                problemId: "PS012",
+                department: "Health Department, Kerala",
+                title: "Migrant Health Records System",
+                description: "Kerala's significant migrant population lacks comprehensive health record systems, with individuals potentially serving as carriers for infectious diseases, posing public health risks.",
+                targetAudience: "Migrant workers, Healthcare providers, Public health officials, Local communities",
+                proposedSolution: "Dedicated software solution for maintaining migrant health records with disease surveillance and fair healthcare access features.",
+                expectedOutcome: "Comprehensive health record system supporting disease prevention, public health surveillance, and equitable healthcare delivery",
+                impact: "Supports SDG achievement, prevents disease transmission, enhances public health surveillance, and ensures fair healthcare access."
+            },
+            {
+                problemId: "PS013",
+                department: "Technical Education Department",
+                title: "Low-Bandwidth Virtual Classroom System",
+                description: "Rural diploma colleges lack subject lecturers and face infrastructure challenges with low, unstable internet speeds making conventional video-conferencing unreliable for remote learning.",
+                targetAudience: "Rural college students, City-based faculty, Educational institutions, Technical education boards",
+                proposedSolution: "Software-only virtual classroom ecosystem optimized for low bandwidth with clear audio, compressed visual content, and interactive elements.",
+                expectedOutcome: "Virtual classroom system supporting live and recorded sessions, interactive elements, and easy content access for limited bandwidth environments",
+                impact: "Bridges urban-rural learning divide, provides expert instruction access, and offers sustainable solution for resource-constrained institutes."
+            },
+            {
+                problemId: "PS014",
+                department: "Cultural Heritage Department",
+                title: "Kolam Design Analysis & Recreation System",
+                description: "Kolams represent significant cultural traditions with mathematical underpinnings including symmetry, repetition, and spatial reasoning that vary by region and require systematic study.",
+                targetAudience: "Cultural researchers, Artists, Students, Heritage preservation organizations",
+                proposedSolution: "Computer programs (preferably Python) to identify design principles behind Kolam patterns and recreate traditional designs algorithmically.",
+                expectedOutcome: "Software system capable of analyzing Kolam design principles and programmatically recreating traditional patterns",
+                impact: "Preserves cultural heritage, enables systematic study of traditional art forms, and bridges art with mathematical analysis."
+            },
+            {
+                problemId: "PS015",
+                department: "Student Welfare Department",
+                title: "Digital Psychological Intervention System",
+                description: "Mental health issues among college students have increased significantly, but there's a gap in accessible, stigma-free psychological support with under-utilization of counseling services.",
+                targetAudience: "College students, Campus counselors, Student welfare departments, Mental health professionals",
+                proposedSolution: "Digital system with AI-guided support, confidential booking, psychoeducational resources, peer support platform, and admin analytics dashboard.",
+                expectedOutcome: "Comprehensive mental health platform with AI chatbot, appointment booking, resource hub, peer support, and administrative analytics",
+                impact: "Addresses mental health crisis in higher education, reduces stigma, provides early intervention, and enables data-driven policy framework."
+            }
+        ];
+
+        function populateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            problemData.forEach(problem => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${problem.problemId}</strong></td>
+                    <td><span class="department-tag">${problem.department}</span></td>
+                    <td><strong>${problem.title}</strong></td>
+                    <td class="description-cell" title="${problem.description}">${problem.description}</td>
+                    <td>${problem.targetAudience}</td>
+                    <td class="description-cell" title="${problem.proposedSolution}">${problem.proposedSolution}</td>
+                    <td class="description-cell" title="${problem.expectedOutcome}">${problem.expectedOutcome}</td>
+                    <td class="description-cell impact-cell" title="${problem.impact}">${problem.impact}</td>
+                `;
+            });
+        }
+
+        function downloadExcel() {
+            const ws = XLSX.utils.json_to_sheet(problemData.map(problem => ({
+                'Problem ID': problem.problemId,
+                'Department': problem.department,
+                'Problem Title': problem.title,
+                'Description': problem.description,
+                'Target Audience': problem.targetAudience,
+                'Proposed Solution': problem.proposedSolution,
+                'Expected Outcome': problem.expectedOutcome,
+                'Impact': problem.impact
+            })));
+            
+            // Set column widths
+            const colWidths = [
+                { wch: 12 }, // Problem ID
+                { wch: 25 }, // Department
+                { wch: 40 }, // Problem Title
+                { wch: 60 }, // Description
+                { wch: 40 }, // Target Audience
+                { wch: 60 }, // Proposed Solution
+                { wch: 50 }, // Expected Outcome
+                { wch: 50 }  // Impact
+            ];
+            ws['!cols'] = colWidths;
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Problem Statements");
+            
+            // Add metadata sheet
+            const metaData = [
+                { Field: "Total Problems", Value: problemData.length },
+                { Field: "Departments", Value: [...new Set(problemData.map(p => p.department))].length },
+                { Field: "Generated On", Value: new Date().toISOString() },
+                { Field: "Source", Value: "Smart India Hackathon Problem Statements" }
+            ];
+            const metaWs = XLSX.utils.json_to_sheet(metaData);
+            XLSX.utils.book_append_sheet(wb, metaWs, "Metadata");
+            
+            XLSX.writeFile(wb, 'SIH_Problem_Statements_Database.xlsx');
+        }
+
+        // Initialize the table when page loads
+        document.addEventListener('DOMContentLoaded', populateTable);
+    </script>
+</body>
+</html>

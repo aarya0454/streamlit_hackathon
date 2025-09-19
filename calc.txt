@@ -1,0 +1,1064 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import requests
+import matplotlib.pyplot as plt
+from datetime import datetime
+from fpdf import FPDF
+import io
+import base64
+from shapely.geometry import Point
+import geopandas as gpd
+import json
+import math
+
+# --- PAGE CONFIGURATION ---
+st.set_page_config(
+    page_title="Hydro-Assess | Intelligent Recommendation Engine",
+    page_icon="💧",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# --- CUSTOM CSS ---
+st.markdown("""
+<style>
+    .stMetric {
+        border-radius: 10px;
+        padding: 15px;
+        background-color: #f0f2f6;
+        border: 1px solid #ddd;
+    }
+    .recommendation-box {
+        background: linear-gradient(135deg, #2E8B57, #3CB371);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        margin: 20px 0;
+        border: 3px solid #228B22;
+    }
+    .reason-box {
+        background: linear-gradient(135deg, #1E90FF, #4169E1);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin: 15px 0;
+        border-left: 5px solid #0066CC;
+    }
+    .design-card {
+        background-color: #f8f9fa;
+        border: 2px solid #28a745;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .cost-card {
+        background-color: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .alert-card {
+        background-color: #f8d7da;
+        border: 2px solid #dc3545;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    .success-card {
+        background-color: #d4edda;
+        border: 2px solid #28a745;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- SESSION STATE INITIALIZATION ---
+if 'groundwater_gdf' not in st.session_state:
+    st.session_state['groundwater_gdf'] = None
+if 'data_source' not in st.session_state:
+    st.session_state['data_source'] = 'simulation'
+if 'latitude' not in st.session_state:
+    st.session_state['latitude'] = 28.9845  # Default to Delhi coordinates
+if 'longitude' not in st.session_state:
+    st.session_state['longitude'] = 77.7064
+if 'area' not in st.session_state:
+    st.session_state['area'] = 150.0
+
+# --- CONSTANTS ---
+RUNOFF_COEFFICIENTS = {
+    "Concrete Roof": 0.90,
+    "Tile Roof": 0.85,
+    "Metal Sheet": 0.90,
+    "Asphalt": 0.85,
+    "Concrete Surface": 0.75,
+    "Paved Area": 0.70
+}
+
+SOIL_INFILTRATION_RATES = {
+    "Sandy": 25,  # mm/hour
+    "Loamy": 13,
+    "Clay": 5,
+    "Rocky": 2
+}
+
+# --- DATA FETCHING FUNCTIONS ---
+
+@st.cache_data(ttl=3600)
+def get_annual_rainfall(lat, lon):
+    """Fetch annual rainfall data from Open-Meteo API."""
+    try:
+        url = "https://archive-api.open-meteo.com/v1/archive"
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "start_date": "2023-01-01",
+            "end_date": "2023-12-31",
+            "daily": "precipitation_sum",
+            "timezone": "auto"
+        }
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            precipitation = [p if p is not None else 0 for p in data['daily']['precipitation_sum']]
+            return sum(precipitation)
+        return None
+    except Exception as e:
+        st.warning(f"Could not fetch rainfall data: {e}")
+        return None
+
+@st.cache_data(ttl=3600)
+def get_soil_type(lat, lon):
+    """Fetch soil type from ISRIC SoilGrids API."""
+    try:
+        url = f"https://rest.isric.org/soilgrids/v2.0/properties/query"
+        params = {
+            "lon": lon,
+            "lat": lat,
+            "property": "wrb_class",
+            "depth": "0-5cm",
+            "value": "most_likely"
+        }
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            wrb_class = data['properties']['layers'][0]['mapped_units'][0]['wrb_class_name']
+            # Simplify soil types
+            if 'sand' in wrb_class.lower():
+                return 'Sandy'
+            elif 'clay' in wrb_class.lower():
+                return 'Clay'
+            else:
+                return 'Loamy'
+        return "Loamy"  # Default
+    except Exception as e:
+        st.warning(f"Could not fetch soil data: {e}")
+        return "Loamy"
+
+def get_groundwater_data(lat, lon):
+    """Generate simulated groundwater data."""
+    # Create realistic variation based on coordinates
+    depth_base = 10 + ((lat + lon) % 15)
+    seasonal_variation = 2 * np.sin((lat * lon) % 6.28)
+    post_monsoon_depth = max(3, depth_base + seasonal_variation)
+    
+    # Determine aquifer type based on location
+    if lat > 25:  # Northern India
+        aquifer_type = "Alluvial Plains"
+    elif lat < 20:  # Southern India
+        aquifer_type = "Hard Rock (Crystalline)"
+    else:
+        aquifer_type = "Mixed Aquifer System"
+    
+    return {
+        'post_monsoon_depth_m': post_monsoon_depth,
+        'pre_monsoon_depth_m': post_monsoon_depth + 2,
+        'principal_aquifer_type': aquifer_type,
+        'aquifer_yield': 'Moderate' if post_monsoon_depth < 15 else 'Low'
+    }
+
+def query_groundwater_from_gdf(lat, lon, gdf):
+    """Query groundwater data from uploaded GeoDataFrame."""
+    try:
+        user_point = Point(lon, lat)
+        distances = gdf.geometry.distance(user_point)
+        nearest_idx = distances.idxmin()
+        nearest_data = gdf.loc[nearest_idx]
+        return {
+            'post_monsoon_depth_m': float(nearest_data.get('post_monsoon_depth_m', 12)),
+            'pre_monsoon_depth_m': float(nearest_data.get('pre_monsoon_depth_m', 14)),
+            'principal_aquifer_type': str(nearest_data.get('principal_aquifer_type', 'Unknown')),
+            'aquifer_yield': str(nearest_data.get('aquifer_yield', 'Moderate'))
+        }
+    except Exception as e:
+        st.warning(f"Error querying uploaded data: {e}")
+        return get_groundwater_data(lat, lon)
+
+# --- CORE RECOMMENDATION ENGINE ---
+
+def generate_recommendation(params):
+    """
+    Core recommendation engine that analyzes all parameters and generates
+    a specific RWH strategy recommendation.
+    """
+    # 1. Calculate Annual Potential (in liters)
+    annual_potential = params['area'] * (params['annual_rainfall'] / 1000) * params['runoff_coefficient'] * 1000
+    
+    # 2. Apply Decision Rules in Order
+    recommendation_type = ""
+    reason = ""
+    
+    # Rule 1: Low Rainfall Check
+    if params['annual_rainfall'] < 500:
+        recommendation_type = "Storage Only"
+        reason = "Annual rainfall is too low for effective groundwater recharge."
+    
+    # Rule 2: High Groundwater Level Check
+    elif params['post_monsoon_depth_m'] < 8.0:
+        recommendation_type = "Storage Only"
+        reason = "Groundwater level is too high (<8m), making recharge unsafe and ineffective."
+    
+    # Rule 3: Urban Density Check
+    elif params['city_type'] == "Tier 1 (Metro - High Density)":
+        recommendation_type = "Recharge Only"
+        reason = "Prioritizing groundwater recharge is recommended in high-density urban areas to mitigate flooding and restore aquifers, assuming space for large storage tanks is limited."
+    
+    # Rule 4: Default - Hybrid System
+    else:
+        recommendation_type = "Hybrid System"
+        reason = "Optimal balance of direct use and groundwater recharge."
+    
+    # 3. Calculate System Volumes Based on Recommendation
+    if recommendation_type == "Storage Only":
+        volume_to_store = annual_potential
+        volume_to_recharge = 0
+    elif recommendation_type == "Recharge Only":
+        volume_to_store = 0
+        volume_to_recharge = annual_potential
+    else:  # Hybrid System
+        # Calculate household demand for 20-day buffer
+        demand_liters = params['household_size'] * 135 * 20  # 135 LPCD standard
+        volume_to_store = min(demand_liters, annual_potential * 0.5)
+        volume_to_recharge = annual_potential - volume_to_store
+    
+    return {
+        'recommendation_type': recommendation_type,
+        'reason': reason,
+        'annual_potential': annual_potential,
+        'volume_to_store': volume_to_store,
+        'volume_to_recharge': volume_to_recharge,
+        'household_demand_20_days': params['household_size'] * 135 * 20,
+        'efficiency_rating': calculate_efficiency_rating(annual_potential, params)
+    }
+
+def calculate_efficiency_rating(potential, params):
+    """Calculate system efficiency rating."""
+    annual_household_demand = params['household_size'] * 135 * 365
+    potential_coverage = (potential / annual_household_demand) * 100
+    
+    if potential_coverage >= 80:
+        return "Excellent"
+    elif potential_coverage >= 60:
+        return "Good"
+    elif potential_coverage >= 40:
+        return "Fair"
+    else:
+        return "Limited"
+
+# --- DESIGN AND COST CALCULATIONS ---
+
+def calculate_design_and_cost(recommendation_result, params):
+    """Calculate system design specifications and costs."""
+    design = {}
+    cost_breakdown = {}
+    
+    # Storage System Design
+    if recommendation_result['volume_to_store'] > 0:
+        tank_volume_liters = recommendation_result['volume_to_store']
+        tank_volume_m3 = tank_volume_liters / 1000
+        
+        # Calculate optimal cylindrical tank dimensions (height ≈ diameter for efficiency)
+        radius = (tank_volume_m3 / (math.pi * 1.2))**(1/3)  # Assume height = 1.2 * diameter
+        diameter = radius * 2
+        height = tank_volume_m3 / (math.pi * radius**2)
+        
+        design['storage_tank'] = {
+            'volume_liters': tank_volume_liters,
+            'volume_m3': tank_volume_m3,
+            'dimensions': f"{diameter:.1f}m Diameter × {height:.1f}m Height",
+            'type': 'Cylindrical HDPE/Concrete Tank'
+        }
+        
+        # Storage costs (₹4 per liter for HDPE, ₹6 per liter for concrete if >5000L)
+        if tank_volume_liters > 5000:
+            cost_breakdown['storage_tank'] = tank_volume_liters * 6  # Concrete tank
+        else:
+            cost_breakdown['storage_tank'] = tank_volume_liters * 4  # HDPE tank
+    
+    # Recharge System Design
+    if recommendation_result['volume_to_recharge'] > 0:
+        recharge_volume_m3 = recommendation_result['volume_to_recharge'] / 1000
+        
+        # Design recharge pit (assume 2m diameter, calculate required depth)
+        pit_diameter = 2.0
+        pit_area = math.pi * (pit_diameter / 2)**2
+        pit_depth = min(recharge_volume_m3 / pit_area, 4.0)  # Max 4m depth
+        
+        # If single pit is too deep, suggest multiple pits
+        if recharge_volume_m3 / pit_area > 4.0:
+            num_pits = math.ceil(recharge_volume_m3 / (pit_area * 4.0))
+            pit_depth = 4.0
+            design['recharge_system'] = {
+                'volume_m3': recharge_volume_m3,
+                'configuration': f"{num_pits} Recharge Pits",
+                'dimensions': f"Each: {pit_diameter}m Diameter × {pit_depth}m Depth",
+                'total_area': f"{num_pits * pit_area:.1f} m²"
+            }
+        else:
+            design['recharge_system'] = {
+                'volume_m3': recharge_volume_m3,
+                'configuration': "Single Recharge Pit",
+                'dimensions': f"{pit_diameter}m Diameter × {pit_depth:.1f}m Depth",
+                'total_area': f"{pit_area:.1f} m²"
+            }
+        
+        # Recharge costs (₹2500 per cubic meter)
+        cost_breakdown['recharge_system'] = recharge_volume_m3 * 2500
+    
+    # Fixed Components
+    cost_breakdown['first_flush_diverter'] = 3500
+    cost_breakdown['filtration_system'] = 4500
+    cost_breakdown['guttering_and_pipes'] = params['area'] * 15  # ₹15 per m² of catchment
+    cost_breakdown['installation_labor'] = sum(cost_breakdown.values()) * 0.15  # 15% of material cost
+    
+    total_cost = sum(cost_breakdown.values())
+    
+    # Financial Analysis
+    stored_water_m3_annual = recommendation_result['volume_to_store'] / 1000
+    annual_savings = stored_water_m3_annual * params['water_cost_per_m3']
+    
+    # Additional benefits (not monetized but important)
+    flood_mitigation_benefit = recommendation_result['volume_to_recharge'] > 0
+    groundwater_recharge_benefit = recommendation_result['volume_to_recharge'] / 1000  # m³/year
+    
+    payback_period = total_cost / annual_savings if annual_savings > 0 else float('inf')
+    
+    return {
+        'design': design,
+        'cost_breakdown': cost_breakdown,
+        'total_cost': total_cost,
+        'annual_savings': annual_savings,
+        'payback_period_years': payback_period,
+        'flood_mitigation_benefit': flood_mitigation_benefit,
+        'groundwater_recharge_m3_annual': groundwater_recharge_benefit,
+        'maintenance_cost_annual': total_cost * 0.02  # 2% of system cost annually
+    }
+
+# --- PDF REPORT GENERATION ---
+
+class HydroAssessPDF(FPDF):
+    def header(self):
+        self.set_font('Arial', 'B', 16)
+        self.cell(0, 10, 'Hydro-Assess: Rainwater Harvesting Assessment Report', 0, 1, 'C')
+        self.set_font('Arial', 'I', 10)
+        self.cell(0, 5, f'Generated on: {datetime.now().strftime("%B %d, %Y")}', 0, 1, 'C')
+        self.ln(10)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()} | Hydro-Assess Report', 0, 0, 'C')
+
+    def chapter_title(self, title):
+        self.set_font('Arial', 'B', 14)
+        self.set_fill_color(70, 130, 180)
+        self.set_text_color(255, 255, 255)
+        self.cell(0, 8, title, 0, 1, 'L', fill=True)
+        self.set_text_color(0, 0, 0)
+        self.ln(5)
+
+    def add_recommendation_section(self, recommendation):
+        self.chapter_title("EXECUTIVE SUMMARY & RECOMMENDATION")
+        
+        self.set_font('Arial', 'B', 12)
+        self.set_fill_color(46, 139, 87)
+        self.set_text_color(255, 255, 255)
+        self.cell(0, 8, f"Recommended Strategy: {recommendation['recommendation_type']}", 0, 1, 'C', fill=True)
+        self.set_text_color(0, 0, 0)
+        self.ln(5)
+        
+        self.set_font('Arial', '', 10)
+        self.multi_cell(0, 6, f"Rationale: {recommendation['reason']}")
+        self.ln(5)
+        
+        # Key metrics table
+        self.set_font('Arial', 'B', 10)
+        self.cell(90, 8, "Key Performance Metrics", border=1)
+        self.cell(90, 8, "Values", border=1)
+        self.ln()
+        
+        metrics = [
+            ("Annual Harvest Potential", f"{recommendation['annual_potential']:,.0f} liters"),
+            ("Storage Allocation", f"{recommendation['volume_to_store']:,.0f} liters"),
+            ("Recharge Allocation", f"{recommendation['volume_to_recharge']:,.0f} liters"),
+            ("System Efficiency", recommendation['efficiency_rating'])
+        ]
+        
+        self.set_font('Arial', '', 9)
+        for metric, value in metrics:
+            self.cell(90, 6, metric, border=1)
+            self.cell(90, 6, value, border=1)
+            self.ln()
+        
+        self.ln(10)
+
+    def add_design_section(self, design_data):
+        self.chapter_title("RECOMMENDED SYSTEM DESIGN & SPECIFICATIONS")
+        
+        if 'storage_tank' in design_data['design']:
+            tank = design_data['design']['storage_tank']
+            self.set_font('Arial', 'B', 11)
+            self.cell(0, 8, "Storage System:", 0, 1)
+            self.set_font('Arial', '', 10)
+            self.cell(0, 6, f"• Tank Type: {tank['type']}", 0, 1)
+            self.cell(0, 6, f"• Capacity: {tank['volume_liters']:,.0f} L ({tank['volume_m3']:.1f} m³)", 0, 1)
+            self.cell(0, 6, f"• Dimensions: {tank['dimensions']}", 0, 1)
+            self.ln(5)
+        
+        if 'recharge_system' in design_data['design']:
+            recharge = design_data['design']['recharge_system']
+            self.set_font('Arial', 'B', 11)
+            self.cell(0, 8, "Recharge System:", 0, 1)
+            self.set_font('Arial', '', 10)
+            self.cell(0, 6, f"• Configuration: {recharge['configuration']}", 0, 1)
+            self.cell(0, 6, f"• Capacity: {recharge['volume_m3']:.1f} m³", 0, 1)
+            self.cell(0, 6, f"• Dimensions: {recharge['dimensions']}", 0, 1)
+            self.cell(0, 6, f"• Total Footprint: {recharge['total_area']}", 0, 1)
+            self.ln(10)
+
+    def add_cost_analysis(self, financial_data):
+        self.chapter_title("FINANCIAL ANALYSIS")
+        
+        # Cost breakdown table
+        self.set_font('Arial', 'B', 10)
+        self.cell(120, 8, "Cost Component", border=1)
+        self.cell(60, 8, "Amount (₹)", border=1)
+        self.ln()
+        
+        self.set_font('Arial', '', 9)
+        for component, cost in financial_data['cost_breakdown'].items():
+            display_name = component.replace('_', ' ').title()
+            self.cell(120, 6, display_name, border=1)
+            self.cell(60, 6, f"{cost:,.0f}", border=1)
+            self.ln()
+        
+        # Total cost
+        self.set_font('Arial', 'B', 10)
+        self.cell(120, 8, "TOTAL SYSTEM COST", border=1)
+        self.cell(60, 8, f"₹ {financial_data['total_cost']:,.0f}", border=1)
+        self.ln(10)
+        
+        # Savings analysis
+        if financial_data['annual_savings'] > 0:
+            self.set_font('Arial', '', 10)
+            self.cell(0, 6, f"Annual Water Cost Savings: ₹ {financial_data['annual_savings']:,.0f}", 0, 1)
+            payback = financial_data['payback_period_years']
+            if payback != float('inf'):
+                self.cell(0, 6, f"Simple Payback Period: {payback:.1f} years", 0, 1)
+            self.cell(0, 6, f"Annual Maintenance Cost: ₹ {financial_data['maintenance_cost_annual']:,.0f}", 0, 1)
+            self.ln(5)
+
+def generate_pdf_report(params, recommendation, design_financial, site_data):
+    """Generate comprehensive PDF report."""
+    pdf = HydroAssessPDF()
+    pdf.add_page()
+    
+    # Add all sections
+    pdf.add_recommendation_section(recommendation)
+    pdf.add_design_section(design_financial)
+    pdf.add_cost_analysis(design_financial)
+    
+    # Site data section
+    pdf.chapter_title("SITE CHARACTERISTICS & DATA")
+    pdf.set_font('Arial', '', 10)
+    
+    site_info = [
+        ("Location Coordinates", f"{params['latitude']:.4f}°N, {params['longitude']:.4f}°E"),
+        ("Catchment Area", f"{params['area']:,.0f} m²"),
+        ("Surface Type", params['surface_type']),
+        ("Runoff Coefficient", f"{params['runoff_coefficient']:.2f}"),
+        ("Annual Rainfall (2023)", f"{params['annual_rainfall']:.0f} mm"),
+        ("Soil Type", site_data['soil_type']),
+        ("Groundwater Depth (Post-monsoon)", f"{site_data['post_monsoon_depth_m']:.1f} m"),
+        ("Principal Aquifer", site_data['principal_aquifer_type']),
+        ("City Classification", params['city_type']),
+        ("Household Size", f"{params['household_size']} persons")
+    ]
+    
+    for info, value in site_info:
+        pdf.cell(90, 6, info, border=1)
+        pdf.cell(90, 6, str(value), border=1)
+        pdf.ln()
+    
+    return pdf.output(dest='S').encode('latin-1')
+
+# --- STREAMLIT UI ---
+
+def main():
+    st.title("💧 Hydro-Assess | Intelligent Recommendation Engine")
+    st.markdown("### Smart Rainwater Harvesting System Design & Assessment")
+    
+    # Navigation
+    tab1, tab2, tab3 = st.tabs(["📍 Site Selection", "⚡ Assessment Engine", "📊 Results & Report"])
+    
+    with tab1:
+        show_site_selection()
+    
+    with tab2:
+        show_assessment_engine()
+    
+    with tab3:
+        show_results_and_report()
+
+def show_site_selection():
+    st.header("📍 Site Selection & Configuration")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Property Location")
+        latitude = st.number_input("Latitude", value=st.session_state.latitude, format="%.6f", help="Enter your property's latitude")
+        longitude = st.number_input("Longitude", value=st.session_state.longitude, format="%.6f", help="Enter your property's longitude")
+        
+        st.subheader("Catchment Configuration")
+        area = st.number_input("Total Catchment Area (m²)", min_value=10.0, value=st.session_state.area, step=10.0, help="Total roof and surface area for water collection")
+    
+    with col2:
+        st.subheader("Surface Parameters")
+        surface_type = st.selectbox("Primary Surface Type", list(RUNOFF_COEFFICIENTS.keys()))
+        runoff_coefficient = RUNOFF_COEFFICIENTS[surface_type]
+        st.info(f"**Runoff Coefficient:** {runoff_coefficient}")
+        
+        st.subheader("Household Configuration")
+        household_size = st.slider("Household Size (persons)", 1, 15, 4)
+        city_type = st.selectbox("City Classification", ["Tier 2 & 3 (Lower Density)", "Tier 1 (Metro - High Density)"])
+        water_cost_per_m3 = st.number_input("Water Cost (₹ per m³)", min_value=10.0, value=25.0, step=1.0)
+    
+    # Advanced data upload
+    with st.expander("🔬 Advanced: Upload Local Groundwater Data"):
+        uploaded_file = st.file_uploader("Upload GeoJSON file with groundwater data", type=['geojson'])
+        if uploaded_file:
+            try:
+                gdf = gpd.read_file(uploaded_file)
+                required_cols = ['post_monsoon_depth_m', 'principal_aquifer_type']
+                if all(col in gdf.columns for col in required_cols):
+                    st.session_state.groundwater_gdf = gdf
+                    st.session_state.data_source = 'uploaded'
+                    st.success(f"✅ Successfully loaded {len(gdf)} groundwater data points")
+                else:
+                    st.error(f"❌ Missing required columns: {required_cols}")
+            except Exception as e:
+                st.error(f"❌ Error loading file: {e}")
+    
+    if st.button("🎯 Confirm Site Configuration", type="primary"):
+        st.session_state.latitude = latitude
+        st.session_state.longitude = longitude
+        st.session_state.area = area
+        st.session_state.surface_type = surface_type
+        st.session_state.runoff_coefficient = runoff_coefficient
+        st.session_state.household_size = household_size
+        st.session_state.city_type = city_type
+        st.session_state.water_cost_per_m3 = water_cost_per_m3
+        st.success("✅ Site configuration saved successfully!")
+
+def show_assessment_engine():
+    st.header("⚡ Intelligent Assessment Engine")
+    
+    # Check if configuration is complete
+    required_keys = ['latitude', 'longitude', 'area', 'surface_type', 'runoff_coefficient', 'household_size', 'city_type', 'water_cost_per_m3']
+    if not all(key in st.session_state for key in required_keys):
+        st.warning("⚠️ Please complete the site configuration in the 'Site Selection' tab first.")
+        return
+    
+    # Display current configuration
+    st.subheader("📋 Current Configuration")
+    config_col1, config_col2 = st.columns(2)
+    
+    with config_col1:
+        st.info(f"**Location:** {st.session_state.latitude:.4f}°N, {st.session_state.longitude:.4f}°E")
+        st.info(f"**Catchment Area:** {st.session_state.area:,.0f} m²")
+        st.info(f"**Surface Type:** {st.session_state.surface_type}")
+        st.info(f"**Runoff Coefficient:** {st.session_state.runoff_coefficient}")
+    
+    with config_col2:
+        st.info(f"**Household Size:** {st.session_state.household_size} persons")
+        st.info(f"**City Type:** {st.session_state.city_type}")
+        st.info(f"**Water Cost:** ₹{st.session_state.water_cost_per_m3}/m³")
+        data_source_text = "Local Data" if st.session_state.data_source == 'uploaded' else "Simulated Data"
+        st.info(f"**Groundwater Data:** {data_source_text}")
+    
+    st.markdown("---")
+    
+    # Run Assessment Button
+    if st.button("🔍 Run Intelligent Assessment", type="primary", help="Analyze your site and generate recommendations"):
+        run_complete_assessment()
+
+def run_complete_assessment():
+    """Execute the complete assessment workflow."""
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    # Step 1: Compile parameters
+    status_text.text("Compiling site parameters...")
+    progress_bar.progress(20)
+    
+    params = {
+        'latitude': st.session_state.latitude,
+        'longitude': st.session_state.longitude,
+        'area': st.session_state.area,
+        'surface_type': st.session_state.surface_type,
+        'runoff_coefficient': st.session_state.runoff_coefficient,
+        'household_size': st.session_state.household_size,
+        'city_type': st.session_state.city_type,
+        'water_cost_per_m3': st.session_state.water_cost_per_m3
+    }
+    
+    # Step 2: Fetch external data
+    status_text.text("Fetching rainfall and soil data...")
+    progress_bar.progress(40)
+    
+    params['annual_rainfall'] = get_annual_rainfall(params['latitude'], params['longitude'])
+    if not params['annual_rainfall']:
+        st.error("Could not fetch rainfall data. Please check your internet connection and try again.")
+        return
+    
+    soil_type = get_soil_type(params['latitude'], params['longitude'])
+    
+    # Step 3: Get groundwater data
+    status_text.text("Analyzing groundwater conditions...")
+    progress_bar.progress(60)
+    
+    if st.session_state.data_source == 'uploaded' and st.session_state.groundwater_gdf is not None:
+        groundwater_data = query_groundwater_from_gdf(
+            params['latitude'], params['longitude'], st.session_state.groundwater_gdf
+        )
+        data_source_msg = "Using your uploaded groundwater data"
+    else:
+        groundwater_data = get_groundwater_data(params['latitude'], params['longitude'])
+        data_source_msg = "Using simulated groundwater data"
+    
+    params.update(groundwater_data)
+    
+    # Step 4: Run recommendation engine
+    status_text.text("Generating intelligent recommendations...")
+    progress_bar.progress(80)
+    
+    recommendation_result = generate_recommendation(params)
+    
+    # Step 5: Calculate design and costs
+    status_text.text("Calculating system design and costs...")
+    progress_bar.progress(90)
+    
+    design_financial = calculate_design_and_cost(recommendation_result, params)
+    
+    # Store results in session state
+    st.session_state.assessment_params = params
+    st.session_state.recommendation_result = recommendation_result
+    st.session_state.design_financial = design_financial
+    st.session_state.soil_type = soil_type
+    st.session_state.data_source_message = data_source_msg
+    
+    status_text.text("Assessment completed!")
+    progress_bar.progress(100)
+    
+    # Show results immediately
+    st.success("Assessment completed successfully! View detailed results in the 'Results & Report' tab.")
+    st.balloons()
+
+def show_results_and_report():
+    st.header("Results & Comprehensive Report")
+    
+    # Check if assessment has been run
+    if 'recommendation_result' not in st.session_state:
+        st.warning("Please run the assessment first in the 'Assessment Engine' tab.")
+        return
+    
+    # Get results from session state
+    params = st.session_state.assessment_params
+    recommendation = st.session_state.recommendation_result
+    design_financial = st.session_state.design_financial
+    soil_type = st.session_state.soil_type
+    
+    # Display main recommendation prominently
+    st.markdown(f"""
+    <div class="recommendation-box">
+        <h2>Recommended Strategy: <strong>{recommendation['recommendation_type']}</strong></h2>
+        <p style="font-size: 18px; margin-top: 10px;">System Efficiency: <strong>{recommendation['efficiency_rating']}</strong></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+    <div class="reason-box">
+        <strong>Strategic Rationale:</strong> {recommendation['reason']}
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Key performance metrics
+    st.subheader("Key Performance Metrics")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Annual Harvest Potential",
+            f"{recommendation['annual_potential']:,.0f} L",
+            help="Total rainwater that can be harvested annually"
+        )
+    
+    with col2:
+        st.metric(
+            "Storage Allocation",
+            f"{recommendation['volume_to_store']:,.0f} L",
+            help="Water allocated for direct household use"
+        )
+    
+    with col3:
+        st.metric(
+            "Recharge Allocation", 
+            f"{recommendation['volume_to_recharge']:,.0f} L",
+            help="Water allocated for groundwater recharge"
+        )
+    
+    with col4:
+        coverage_pct = (recommendation['annual_potential'] / (params['household_size'] * 135 * 365)) * 100
+        st.metric(
+            "Household Demand Coverage",
+            f"{min(coverage_pct, 100):.1f}%",
+            help="Percentage of annual household water demand that can be met"
+        )
+    
+    # Detailed results in tabs
+    result_tab1, result_tab2, result_tab3, result_tab4 = st.tabs(["System Design", "Financial Analysis", "Site Data", "Summary Report"])
+    
+    with result_tab1:
+        show_system_design_tab(design_financial)
+    
+    with result_tab2:
+        show_financial_analysis_tab(design_financial, recommendation)
+    
+    with result_tab3:
+        show_site_data_tab(params, soil_type)
+    
+    with result_tab4:
+        show_summary_report_tab(params, recommendation, design_financial, soil_type)
+
+def show_system_design_tab(design_financial):
+    st.header("Recommended System Design")
+    
+    if not design_financial['design']:
+        st.info("No physical system components recommended based on the analysis.")
+        return
+    
+    # Storage system
+    if 'storage_tank' in design_financial['design']:
+        tank = design_financial['design']['storage_tank']
+        st.markdown(f"""
+        <div class="design-card">
+            <h4>Storage System Specifications</h4>
+            <ul>
+                <li><strong>Tank Type:</strong> {tank['type']}</li>
+                <li><strong>Capacity:</strong> {tank['volume_liters']:,.0f} liters ({tank['volume_m3']:.1f} m³)</li>
+                <li><strong>Recommended Dimensions:</strong> {tank['dimensions']}</li>
+                <li><strong>Installation:</strong> Underground/Above-ground based on site conditions</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Recharge system
+    if 'recharge_system' in design_financial['design']:
+        recharge = design_financial['design']['recharge_system']
+        st.markdown(f"""
+        <div class="design-card">
+            <h4>Recharge System Specifications</h4>
+            <ul>
+                <li><strong>Configuration:</strong> {recharge['configuration']}</li>
+                <li><strong>Total Capacity:</strong> {recharge['volume_m3']:.1f} m³</li>
+                <li><strong>Dimensions:</strong> {recharge['dimensions']}</li>
+                <li><strong>Total Footprint:</strong> {recharge['total_area']}</li>
+                <li><strong>Depth:</strong> Lined with filter media (sand, gravel)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Additional components
+    st.subheader("Supporting Infrastructure")
+    components = [
+        "First flush diverter for water quality management",
+        "Multi-stage filtration system (leaf screens, sand filters)",
+        "Gutter system with appropriate sizing and slope",
+        "Distribution piping with valves and controls",
+        "Overflow management and safety systems"
+    ]
+    
+    for component in components:
+        st.write(f"• {component}")
+
+def show_financial_analysis_tab(design_financial, recommendation):
+    st.header("Comprehensive Financial Analysis")
+    
+    # Cost breakdown
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.subheader("System Cost Breakdown")
+        
+        # Create cost breakdown chart
+        costs = design_financial['cost_breakdown']
+        # Filter out zero costs for better visualization
+        filtered_costs = {k: v for k, v in costs.items() if v > 0}
+        
+        if filtered_costs:
+            fig, ax = plt.subplots(figsize=(8, 8))
+            labels = [k.replace('_', ' ').title() for k in filtered_costs.keys()]
+            values = list(filtered_costs.values())
+            colors = plt.cm.Set3(np.linspace(0, 1, len(values)))
+            
+            wedges, texts, autotexts = ax.pie(values, labels=labels, autopct='%1.1f%%', 
+                                            colors=colors, startangle=90)
+            ax.set_title("System Cost Distribution", fontsize=14, fontweight='bold')
+            
+            # Improve text visibility
+            for autotext in autotexts:
+                autotext.set_color('black')
+                autotext.set_fontweight('bold')
+            
+            st.pyplot(fig)
+        
+        # Cost summary table
+        st.markdown(f"""
+        <div class="cost-card">
+            <h4>Investment Summary</h4>
+            <table style="width:100%">
+                <tr><td><strong>Total System Cost:</strong></td><td><strong>₹ {design_financial['total_cost']:,.0f}</strong></td></tr>
+                <tr><td>Annual Maintenance:</td><td>₹ {design_financial['maintenance_cost_annual']:,.0f}</td></tr>
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.subheader("Financial Benefits & Payback")
+        
+        if design_financial['annual_savings'] > 0:
+            # Create savings projection chart
+            years = list(range(1, 11))
+            annual_savings = [design_financial['annual_savings']] * 10
+            annual_maintenance = [design_financial['maintenance_cost_annual']] * 10
+            net_annual_savings = [s - m for s, m in zip(annual_savings, annual_maintenance)]
+            cumulative_savings = np.cumsum(net_annual_savings)
+            
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.bar(years, cumulative_savings, alpha=0.7, color='green', label='Cumulative Net Savings')
+            ax.axhline(y=design_financial['total_cost'], color='red', linestyle='--', 
+                      linewidth=2, label='Initial Investment')
+            
+            ax.set_xlabel('Years')
+            ax.set_ylabel('Amount (₹)')
+            ax.set_title('10-Year Financial Projection')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            
+            # Format y-axis labels
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'₹{x/1000:.0f}K'))
+            
+            st.pyplot(fig)
+            
+            # Financial metrics
+            payback_years = design_financial['payback_period_years']
+            payback_text = f"{payback_years:.1f} years" if payback_years != float('inf') else "N/A"
+            
+            st.success(f"Annual Water Savings: ₹ {design_financial['annual_savings']:,.0f}")
+            st.success(f"Simple Payback Period: {payback_text}")
+            
+            # ROI calculation
+            if payback_years != float('inf'):
+                roi_10_year = ((cumulative_savings[-1] - design_financial['total_cost']) / design_financial['total_cost']) * 100
+                st.success(f"10-Year ROI: {roi_10_year:.1f}%")
+        else:
+            st.info("This system focuses on environmental benefits rather than direct cost savings.")
+    
+    # Environmental benefits
+    st.subheader("Environmental Impact")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        annual_harvest_m3 = recommendation['annual_potential'] / 1000
+        st.metric("Water Independence", f"{annual_harvest_m3:,.0f} m³/year", 
+                 help="Annual freshwater demand reduction")
+    
+    with col2:
+        if design_financial['groundwater_recharge_m3_annual'] > 0:
+            st.metric("Groundwater Recharge", f"{design_financial['groundwater_recharge_m3_annual']:,.0f} m³/year",
+                     help="Annual groundwater replenishment")
+        else:
+            st.metric("Runoff Reduction", f"{annual_harvest_m3:,.0f} m³/year",
+                     help="Reduced stormwater runoff")
+    
+    with col3:
+        co2_reduction = annual_harvest_m3 * 0.5  # Approximate CO2 savings
+        st.metric("CO₂ Footprint Reduction", f"{co2_reduction:.0f} kg/year",
+                 help="Estimated carbon footprint reduction")
+
+def show_site_data_tab(params, soil_type):
+    st.header("Site Characteristics & Geo-Hydrology")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Location Data")
+        location_data = {
+            "Coordinates": f"{params['latitude']:.6f}°N, {params['longitude']:.6f}°E",
+            "Catchment Area": f"{params['area']:,.0f} m²",
+            "Surface Type": params['surface_type'],
+            "Runoff Coefficient": f"{params['runoff_coefficient']:.2f}",
+            "City Classification": params['city_type'],
+            "Household Size": f"{params['household_size']} persons"
+        }
+        
+        for key, value in location_data.items():
+            st.write(f"**{key}:** {value}")
+    
+    with col2:
+        st.subheader("Hydro-Geological Data")
+        hydro_data = {
+            "Annual Rainfall (2023)": f"{params['annual_rainfall']:.0f} mm",
+            "Soil Classification": soil_type,
+            "Groundwater Depth (Post-monsoon)": f"{params['post_monsoon_depth_m']:.1f} m bgl",
+            "Groundwater Depth (Pre-monsoon)": f"{params['pre_monsoon_depth_m']:.1f} m bgl",
+            "Principal Aquifer Type": params['principal_aquifer_type'],
+            "Aquifer Yield": params.get('aquifer_yield', 'Moderate')
+        }
+        
+        for key, value in hydro_data.items():
+            st.write(f"**{key}:** {value}")
+    
+    # Data source information
+    st.info(st.session_state.get('data_source_message', 'Using simulated data'))
+    
+    # Site suitability assessment
+    st.subheader("Site Suitability Assessment")
+    
+    suitability_factors = []
+    
+    # Rainfall assessment
+    if params['annual_rainfall'] > 800:
+        suitability_factors.append("Excellent rainfall for harvesting systems")
+    elif params['annual_rainfall'] > 500:
+        suitability_factors.append("Good rainfall supports both storage and recharge")
+    else:
+        suitability_factors.append("Low rainfall limits recharge effectiveness")
+    
+    # Groundwater assessment
+    if params['post_monsoon_depth_m'] > 15:
+        suitability_factors.append("Deep groundwater ideal for recharge systems")
+    elif params['post_monsoon_depth_m'] > 8:
+        suitability_factors.append("Moderate groundwater depth suitable for recharge")
+    else:
+        suitability_factors.append("Shallow groundwater may limit recharge options")
+    
+    # Area assessment
+    if params['area'] > 200:
+        suitability_factors.append("Large catchment area enables significant water harvesting")
+    elif params['area'] > 100:
+        suitability_factors.append("Good catchment area for household-scale systems")
+    else:
+        suitability_factors.append("Compact catchment suitable for focused applications")
+    
+    for factor in suitability_factors:
+        st.markdown(f"• {factor}")
+
+def show_summary_report_tab(params, recommendation, design_financial, soil_type):
+    st.header("Executive Summary Report")
+    
+    # Generate PDF report
+    site_data = {
+        'soil_type': soil_type,
+        'post_monsoon_depth_m': params['post_monsoon_depth_m'],
+        'principal_aquifer_type': params['principal_aquifer_type'],
+        'aquifer_yield': params.get('aquifer_yield', 'Moderate')
+    }
+    
+    try:
+        pdf_bytes = generate_pdf_report(params, recommendation, design_financial, site_data)
+        
+        st.success("Your comprehensive assessment report is ready!")
+        
+        # Download button
+        st.download_button(
+            label="Download Complete Report (PDF)",
+            data=pdf_bytes,
+            file_name=f"Hydro_Assess_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+            mime="application/pdf",
+            type="primary"
+        )
+        
+        # Report preview
+        st.subheader("Report Preview")
+        
+        preview_col1, preview_col2 = st.columns(2)
+        
+        with preview_col1:
+            st.markdown("**Report Contents:**")
+            contents = [
+                "Executive Summary & Recommendation",
+                "System Design & Specifications", 
+                "Financial Analysis & Cost Breakdown",
+                "Site Characteristics & Geo-hydrology",
+                "Implementation Guidelines",
+                "Maintenance Recommendations"
+            ]
+            
+            for i, content in enumerate(contents, 1):
+                st.write(f"{i}. {content}")
+        
+        with preview_col2:
+            st.markdown("**Key Deliverables:**")
+            deliverables = [
+                f"Strategy: {recommendation['recommendation_type']}",
+                f"Investment: ₹ {design_financial['total_cost']:,.0f}",
+                f"Annual Benefit: ₹ {design_financial['annual_savings']:,.0f}",
+                f"Harvest Potential: {recommendation['annual_potential']:,.0f} L/year",
+                f"Efficiency Rating: {recommendation['efficiency_rating']}",
+                "Technical Specifications & Drawings"
+            ]
+            
+            for deliverable in deliverables:
+                st.markdown(f"• {deliverable}")
+        
+        # Implementation next steps
+        st.subheader("Recommended Next Steps")
+        next_steps = [
+            "1. **Finalize Design**: Consult with local contractors for site-specific modifications",
+            "2. **Obtain Permits**: Check local building codes and water authority requirements",
+            "3. **Source Materials**: Procure system components based on specifications",
+            "4. **Schedule Installation**: Plan installation during dry season if possible",
+            "5. **Setup Maintenance**: Establish regular inspection and cleaning schedule"
+        ]
+        
+        for step in next_steps:
+            st.write(step)
+            
+    except Exception as e:
+        st.error(f"Error generating PDF report: {e}")
+        st.info("Please try refreshing the page and running the assessment again.")
+
+# --- MAIN APPLICATION ---
+if __name__ == "__main__":
+    main()

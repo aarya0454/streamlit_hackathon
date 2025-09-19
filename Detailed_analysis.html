@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Solutions & Implementation Plan</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 30px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .download-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+            display: block;
+            margin: 20px auto;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(17, 153, 142, 0.4);
+        }
+        .preview-table {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.85rem;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: top;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .description-cell {
+            max-width: 250px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        .tech-stack {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .impact-high { color: #d32f2f; font-weight: bold; }
+        .impact-medium { color: #f57c00; font-weight: bold; }
+        .complexity-high { color: #c62828; }
+        .complexity-medium { color: #ef6c00; }
+        .complexity-low { color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Technical Solutions & Implementation Plan</h1>
+            <p>Comprehensive Analysis & Development Roadmap for SIH Problems</p>
+        </div>
+        
+        <div class="content">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Solutions Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">45+</div>
+                    <div class="stat-label">Technologies Identified</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Implementation Phases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3-6</div>
+                    <div class="stat-label">Months Timeline</div>
+                </div>
+            </div>
+
+            <button class="download-btn" onclick="downloadExcel()">
+                🚀 Download Technical Solutions Excel
+            </button>
+
+            <div class="preview-table">
+                <table id="solutionsTable">
+                    <thead>
+                        <tr>
+                            <th>Problem ID</th>
+                            <th>Problem Title</th>
+                            <th>Our Solution Approach</th>
+                            <th>Technology Stack</th>
+                            <th>Implementation Steps</th>
+                            <th>Timeline</th>
+                            <th>Complexity</th>
+                            <th>Impact Level</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const technicalSolutions = [
+            {
+                problemId: "PS001",
+                title: "Rural School Attendance Automation",
+                ourSolution: "Smart Attendance System using Computer Vision and IoT sensors with offline capability and government integration",
+                techStack: "Frontend: React Native, Redux\nBackend: Python, FastAPI, PostgreSQL\nML: TensorFlow, OpenCV, face_recognition\nHardware: Raspberry Pi, RFID modules\nDeployment: Docker, AWS",
+                implementationSteps: "Phase 1: Facial recognition model training (3 weeks)\nPhase 2: RFID integration for backup (2 weeks)\nPhase 3: Mobile app development (4 weeks)\nPhase 4: Offline sync capability (2 weeks)\nPhase 5: Government portal integration (2 weeks)\nPhase 6: Field testing and deployment (3 weeks)",
+                timeline: "4-5 months",
+                complexity: "Medium",
+                impactLevel: "High",
+                detailedTechStack: "Python 3.9+, FastAPI, SQLAlchemy, PostgreSQL, Redis, React Native, Redux, TypeScript, TensorFlow 2.x, OpenCV 4.x, face_recognition library, scikit-learn, Raspberry Pi 4, USB cameras, RFID RC522 modules, Arduino Uno, Docker, AWS/GCP, Nginx",
+                estimatedCost: "$15,000 - $25,000",
+                teamSize: "5-6 developers",
+                keyFeatures: "Facial recognition, RFID backup, Offline sync, Government integration, Real-time reporting, Multi-language support"
+            },
+            {
+                problemId: "PS002",
+                title: "Smart Attendance & Student Development",
+                ourSolution: "AI-powered comprehensive student management platform with personalized learning recommendations and automated scheduling",
+                techStack: "Frontend: React, Material-UI, Chart.js\nBackend: Django, PostgreSQL, Redis\nML: TensorFlow, scikit-learn, NLP\nMobile: React Native, Bluetooth APIs\nReal-time: WebSocket, Firebase",
+                implementationSteps: "Phase 1: Multi-modal attendance system (4 weeks)\nPhase 2: Student profiling and analytics (3 weeks)\nPhase 3: AI recommendation engine (4 weeks)\nPhase 4: Real-time dashboard (3 weeks)\nPhase 5: Mobile app development (4 weeks)\nPhase 6: Integration testing (2 weeks)",
+                timeline: "5-6 months",
+                complexity: "High",
+                impactLevel: "High",
+                detailedTechStack: "Django 4.x, Django REST Framework, PostgreSQL, Redis, Celery, React 18, Material-UI, Chart.js, Socket.io, TensorFlow, Pandas, NumPy, scikit-learn, React Native, Expo, Bluetooth APIs, QR scanner, WebSocket, Firebase",
+                estimatedCost: "$25,000 - $40,000",
+                teamSize: "7-8 developers",
+                keyFeatures: "Multi-modal attendance, AI recommendations, Real-time dashboard, Student analytics, Personalized tasks, Career guidance"
+            },
+            {
+                problemId: "PS003",
+                title: "Blockchain Ayurvedic Herb Traceability",
+                ourSolution: "Hyperledger-based supply chain platform with IoT integration, smart contracts, and consumer transparency through QR codes",
+                techStack: "Blockchain: Hyperledger Fabric, Smart contracts\nBackend: Node.js, MongoDB\nFrontend: React, Mapbox GL\nIoT: Raspberry Pi, GPS modules\nStorage: IPFS, QR libraries",
+                implementationSteps: "Phase 1: Blockchain network setup (3 weeks)\nPhase 2: Smart contract development (4 weeks)\nPhase 3: IoT integration (3 weeks)\nPhase 4: Backend API development (4 weeks)\nPhase 5: Consumer applications (5 weeks)\nPhase 6: QR system implementation (2 weeks)\nPhase 7: Pilot testing (4 weeks)",
+                timeline: "6-7 months",
+                complexity: "High",
+                impactLevel: "High",
+                detailedTechStack: "Hyperledger Fabric 2.x, Chaincode (Go/Node.js), Node.js, Express.js, MongoDB, React, Redux, Web3.js, Mapbox GL, Raspberry Pi, Arduino, GPS modules, Temperature sensors, IPFS, QR code libraries, Geolocation APIs",
+                estimatedCost: "$40,000 - $60,000",
+                teamSize: "8-10 developers",
+                keyFeatures: "End-to-end traceability, Smart contracts, IoT sensors, Consumer QR scanning, Supply chain transparency, Compliance automation"
+            },
+            {
+                problemId: "PS004",
+                title: "Fake Degree Detection System",
+                ourSolution: "AI-powered document verification system using OCR, blockchain verification, and institutional database integration",
+                techStack: "Backend: Python, FastAPI, PostgreSQL\nOCR: Tesseract, OpenCV, PIL\nML: TensorFlow, scikit-learn\nFrontend: React, Material-UI\nBlockchain: Web3.py, Smart contracts",
+                implementationSteps: "Phase 1: OCR and text extraction (3 weeks)\nPhase 2: AI authenticity model (4 weeks)\nPhase 3: Blockchain verification (3 weeks)\nPhase 4: Institution integration (3 weeks)\nPhase 5: Admin dashboard (3 weeks)\nPhase 6: Security implementation (2 weeks)",
+                timeline: "4-5 months",
+                complexity: "Medium",
+                impactLevel: "High",
+                detailedTechStack: "Python 3.9+, FastAPI, SQLAlchemy, PostgreSQL, Redis, Tesseract OCR, PyPDF2, OpenCV, PIL, TensorFlow, scikit-learn, NLP libraries, React, Material-UI, Web3.py, Ethereum integration, JWT authentication",
+                estimatedCost: "$20,000 - $35,000",
+                teamSize: "6-7 developers",
+                keyFeatures: "OCR extraction, AI verification, Blockchain validation, Institution APIs, Bulk processing, Security features"
+            },
+            {
+                problemId: "PS005",
+                title: "AI-Powered eConsultation Analysis",
+                ourSolution: "NLP-based sentiment analysis system with automated summarization and visual analytics for policy feedback",
+                techStack: "Backend: Python, FastAPI, PostgreSQL\nNLP: NLTK, spaCy, Transformers\nFrontend: React, D3.js, Chart.js\nVisualization: Wordcloud, Plotly\nProcessing: Pandas, Celery",
+                implementationSteps: "Phase 1: Text preprocessing pipeline (2 weeks)\nPhase 2: Sentiment analysis model (3 weeks)\nPhase 3: Summarization system (3 weeks)\nPhase 4: Visualization components (2 weeks)\nPhase 5: Analytics dashboard (3 weeks)\nPhase 6: API integration (2 weeks)",
+                timeline: "3-4 months",
+                complexity: "Medium",
+                impactLevel: "Medium",
+                detailedTechStack: "Python 3.9+, FastAPI, PostgreSQL, SQLAlchemy, NLTK, spaCy, Transformers, BERT, TextBlob, Gensim, scikit-learn, React, D3.js, Chart.js, Material-UI, Wordcloud library, Matplotlib, Plotly, Pandas, NumPy, Celery",
+                estimatedCost: "$15,000 - $25,000",
+                teamSize: "5-6 developers",
+                keyFeatures: "Sentiment analysis, Auto-summarization, Word clouds, Bulk processing, Analytics dashboard, MCA integration"
+            },
+            {
+                problemId: "PS006",
+                title: "AI-Powered ARGO Oceanographic Data",
+                ourSolution: "RAG-powered conversational interface for oceanographic data with natural language querying and interactive visualizations",
+                techStack: "Backend: Python, FastAPI, PostgreSQL\nRAG: LangChain, ChromaDB, LLM APIs\nData: NetCDF4, xarray, pandas\nFrontend: Streamlit, Plotly\nVisualization: Mapbox, Cesium",
+                implementationSteps: "Phase 1: NetCDF processing pipeline (3 weeks)\nPhase 2: Vector database setup (2 weeks)\nPhase 3: RAG system development (4 weeks)\nPhase 4: Query translation (3 weeks)\nPhase 5: Dashboard development (4 weeks)\nPhase 6: Visualization components (3 weeks)",
+                timeline: "5-6 months",
+                complexity: "High",
+                impactLevel: "Medium",
+                detailedTechStack: "Python 3.9+, FastAPI, PostgreSQL, SQLAlchemy, LangChain, ChromaDB, OpenAI/Claude APIs, NetCDF4, xarray, pandas, NumPy, Streamlit, React, Plotly, Mapbox GL, Leaflet, Cesium, Hugging Face Transformers",
+                estimatedCost: "$30,000 - $45,000",
+                teamSize: "6-8 developers",
+                keyFeatures: "Natural language queries, RAG system, Interactive visualizations, Geospatial mapping, Chat interface, Data exploration"
+            },
+            {
+                problemId: "PS007",
+                title: "Gamified STEM Learning Platform",
+                ourSolution: "Progressive Web App with offline-first architecture, multilingual support, and adaptive learning algorithms",
+                techStack: "Frontend: React PWA, Service Workers\nBackend: Node.js, MongoDB\nGaming: Phaser.js, PixiJS\nOffline: IndexedDB, Cache API\nI18n: React-i18next",
+                implementationSteps: "Phase 1: PWA setup and offline architecture (2 weeks)\nPhase 2: Gamification engine (4 weeks)\nPhase 3: Content management system (3 weeks)\nPhase 4: STEM content creation (4 weeks)\nPhase 5: Progress tracking (3 weeks)\nPhase 6: Teacher dashboard (2 weeks)",
+                timeline: "4-5 months",
+                complexity: "Medium",
+                impactLevel: "High",
+                detailedTechStack: "React PWA, Service Workers, IndexedDB, Workbox, Node.js, Express.js, MongoDB, Mongoose, Phaser.js, PixiJS, HTML5 Canvas, Cache API, Background Sync, React-i18next, Chart.js, Custom analytics",
+                estimatedCost: "$20,000 - $30,000",
+                teamSize: "6-7 developers",
+                keyFeatures: "Offline capability, Gamification, Multilingual support, Progress tracking, Teacher dashboard, Low-bandwidth optimization"
+            },
+            {
+                problemId: "PS008",
+                title: "Smart Tamper Detection System",
+                ourSolution: "IoT-enabled tamper detection with blockchain logging, ML anomaly detection, and real-time alert system",
+                techStack: "Hardware: ESP32, Arduino, IoT sensors\nBackend: Python, FastAPI, MQTT\nML: TensorFlow, Anomaly detection\nBlockchain: Hyperledger, Smart contracts\nFrontend: React dashboard",
+                implementationSteps: "Phase 1: Hardware and IoT setup (3 weeks)\nPhase 2: ML model development (4 weeks)\nPhase 3: Blockchain logging (3 weeks)\nPhase 4: Alert system (3 weeks)\nPhase 5: Dashboard development (3 weeks)\nPhase 6: Field testing (3 weeks)",
+                timeline: "5-6 months",
+                complexity: "High",
+                impactLevel: "High",
+                detailedTechStack: "ESP32, Arduino, Accelerometers, Pressure sensors, Python 3.9+, FastAPI, PostgreSQL, MQTT broker, Arduino IDE, ESP-IDF, TensorFlow, scikit-learn, Hyperledger Fabric, Smart contracts, React dashboard, Real-time charts",
+                estimatedCost: "$25,000 - $40,000",
+                teamSize: "7-8 developers",
+                keyFeatures: "IoT sensors, ML anomaly detection, Blockchain logging, Real-time alerts, Regulatory dashboard, GPS tracking"
+            },
+            {
+                problemId: "PS009",
+                title: "Rainwater Harvesting Feasibility App",
+                ourSolution: "GIS-integrated web application with automated feasibility calculation, cost estimation, and 3D structure visualization",
+                techStack: "Backend: Node.js, PostgreSQL with PostGIS\nFrontend: React, Mapbox GL JS\nGIS: PostGIS, GDAL, Leaflet\nAPIs: Weather APIs, Elevation APIs\nVisualization: Three.js, PDF generation",
+                implementationSteps: "Phase 1: GIS setup and map interface (2 weeks)\nPhase 2: Feasibility algorithms (3 weeks)\nPhase 3: Weather data integration (2 weeks)\nPhase 4: Cost estimation module (2 weeks)\nPhase 5: 3D visualization (3 weeks)\nPhase 6: Report generation (2 weeks)",
+                timeline: "3-4 months",
+                complexity: "Medium",
+                impactLevel: "Medium",
+                detailedTechStack: "Node.js, Express.js, PostgreSQL with PostGIS, React, Mapbox GL JS, Three.js, PostGIS, GDAL, Leaflet, OpenStreetMap, Weather APIs, Geological survey APIs, PDF generation libraries, Chart.js",
+                estimatedCost: "$18,000 - $28,000",
+                teamSize: "5-6 developers",
+                keyFeatures: "GIS integration, Feasibility calculation, 3D visualization, Cost estimation, Weather analysis, PDF reports"
+            },
+            {
+                problemId: "PS010",
+                title: "AI-Based Rockfall Prediction System",
+                ourSolution: "Multi-sensor data fusion platform with ML prediction models, real-time monitoring, and automated alert system",
+                techStack: "Backend: Python, FastAPI, Time-series DB\nML: TensorFlow, Computer Vision\nSensors: IoT sensors, Drone APIs\nImaging: OpenCV, 3D reconstruction\nFrontend: React, 3D visualization",
+                implementationSteps: "Phase 1: Multi-sensor data collection (3 weeks)\nPhase 2: Image processing pipeline (4 weeks)\nPhase 3: ML prediction models (5 weeks)\nPhase 4: Real-time monitoring (4 weeks)\nPhase 5: Risk mapping (3 weeks)\nPhase 6: Alert system (2 weeks)",
+                timeline: "6-7 months",
+                complexity: "High",
+                impactLevel: "High",
+                detailedTechStack: "Python 3.9+, FastAPI, PostgreSQL, Time-series DB, TensorFlow, PyTorch, Computer Vision libraries, IoT sensors, Strain gauges, Accelerometers, OpenCV, Drone APIs, Image processing, 3D reconstruction, React dashboard, SMS APIs",
+                estimatedCost: "$35,000 - $55,000",
+                teamSize: "8-9 developers",
+                keyFeatures: "Multi-sensor fusion, ML prediction, Real-time monitoring, Risk mapping, Alert system, Mine integration"
+            },
+            {
+                problemId: "PS011",
+                title: "Mobile Sports Talent Assessment",
+                ourSolution: "AI-powered mobile app with computer vision for performance analysis, cheat detection, and automated scoring system",
+                techStack: "Mobile: React Native, TensorFlow Lite\nBackend: Python, FastAPI, Video processing\nML: Computer Vision, Pose estimation\nVideo: FFmpeg, Real-time processing\nCloud: AWS S3, Video streaming",
+                implementationSteps: "Phase 1: Mobile app with camera integration (3 weeks)\nPhase 2: AI model development (4 weeks)\nPhase 3: On-device optimization (3 weeks)\nPhase 4: Cheat detection algorithms (4 weeks)\nPhase 5: Backend processing (3 weeks)\nPhase 6: Official dashboard (2 weeks)",
+                timeline: "4-5 months",
+                complexity: "High",
+                impactLevel: "High",
+                detailedTechStack: "React Native, TensorFlow Lite, OpenCV for mobile, Python 3.9+, FastAPI, PostgreSQL, Video processing, TensorFlow, Computer Vision, Pose estimation, Motion analysis, FFmpeg, Video compression, AWS S3/GCP Storage, CDN",
+                estimatedCost: "$25,000 - $40,000",
+                teamSize: "6-8 developers",
+                keyFeatures: "Computer vision analysis, Cheat detection, Performance measurement, Mobile optimization, Video processing, SAI integration"
+            },
+            {
+                problemId: "PS012",
+                title: "Migrant Health Records System",
+                ourSolution: "Comprehensive health record management with disease surveillance, multilingual support, and integration with public health systems",
+                techStack: "Backend: Django, PostgreSQL\nFrontend: React, Material-UI\nMobile: React Native, QR scanner\nIntegration: HL7, FHIR standards\nSecurity: Encryption, Access control",
+                implementationSteps: "Phase 1: Health record database design (3 weeks)\nPhase 2: Patient registration system (2 weeks)\nPhase 3: Disease surveillance module (3 weeks)\nPhase 4: Healthcare provider interface (3 weeks)\nPhase 5: Mobile app development (3 weeks)\nPhase 6: System integration (3 weeks)",
+                timeline: "4-5 months",
+                complexity: "Medium",
+                impactLevel: "High",
+                detailedTechStack: "Django 4.x, PostgreSQL, Django REST Framework, React, Material-UI, Charts and analytics, React Native, QR code scanner, Offline capability, HL7, FHIR, Encryption, HIPAA compliance, Access control, Disease surveillance algorithms",
+                estimatedCost: "$22,000 - $35,000",
+                teamSize: "6-7 developers",
+                keyFeatures: "Health records, Disease surveillance, Multilingual support, Healthcare integration, Mobile access, Compliance features"
+            },
+            {
+                problemId: "PS013",
+                title: "Low-Bandwidth Virtual Classroom",
+                ourSolution: "Adaptive streaming platform with audio-first approach, content compression, and offline synchronization for rural connectivity",
+                techStack: "Streaming: WebRTC, Node.js, Socket.io\nFrontend: React, Progressive Web App\nCompression: FFmpeg, Adaptive bitrate\nP2P: Peer-to-peer networking\nOffline: Service Workers, IndexedDB",
+                implementationSteps: "Phase 1: Adaptive streaming architecture (3 weeks)\nPhase 2: Audio-first communication (3 weeks)\nPhase 3: Content compression (4 weeks)\nPhase 4: Offline synchronization (3 weeks)\nPhase 5: Interactive elements (3 weeks)\nPhase 6: Interface development (4 weeks)",
+                timeline: "5-6 months",
+                complexity: "High",
+                impactLevel: "High",
+                detailedTechStack: "WebRTC, Node.js, Socket.io, Adaptive bitrate streaming, React, Progressive Web App, Service Workers, FFmpeg, Video/Audio compression, Adaptive quality, Peer-to-peer networking, IndexedDB, Background sync, Real-time polling",
+                estimatedCost: "$30,000 - $45,000",
+                teamSize: "7-8 developers",
+                keyFeatures: "Low-bandwidth optimization, Audio-first approach, Offline content, Interactive elements, Adaptive streaming, Rural connectivity"
+            },
+            {
+                problemId: "PS014",
+                title: "Kolam Design Analysis & Recreation",
+                ourSolution: "Computer vision and pattern recognition system to analyze traditional Kolam designs and recreate them algorithmically",
+                techStack: "Backend: Python, Computer Vision\nML: TensorFlow, Pattern recognition\nMath: NumPy, Geometric algorithms\nFrontend: React, Canvas API\nVisualization: D3.js, SVG generation",
+                implementationSteps: "Phase 1: Image processing for Kolam analysis (3 weeks)\nPhase 2: Pattern recognition algorithms (4 weeks)\nPhase 3: Mathematical modeling (3 weeks)\nPhase 4: Recreation algorithms (4 weeks)\nPhase 5: Web interface development (3 weeks)\nPhase 6: Cultural validation (2 weeks)",
+                timeline: "4-5 months",
+                complexity: "High",
+                impactLevel: "Medium",
+                detailedTechStack: "Python 3.9+, OpenCV, TensorFlow, scikit-learn, NumPy, SciPy, Geometric algorithms, Pattern recognition, React, Canvas API, D3.js, SVG generation, Mathematical libraries, Image processing, Computer graphics",
+                estimatedCost: "$20,000 - $30,000",
+                teamSize: "5-6 developers",
+                keyFeatures: "Pattern analysis, Mathematical modeling, Algorithmic recreation, Cultural preservation, Educational interface, Design generation"
+            },
+            {
+                problemId: "PS015",
+                title: "Digital Psychological Intervention System",
+                ourSolution: "Comprehensive mental health platform with AI chatbot, confidential booking, peer support, and administrative analytics",
+                techStack: "Backend: Django, PostgreSQL\nAI: NLP models, Chatbot frameworks\nFrontend: React, Material-UI\nReal-time: WebSocket, Chat systems\nAnalytics: Data visualization, Reports",
+                implementationSteps: "Phase 1: AI chatbot development (4 weeks)\nPhase 2: Booking and appointment system (3 weeks)\nPhase 3: Peer support platform (3 weeks)\nPhase 4: Resource management (2 weeks)\nPhase 5: Analytics dashboard (3 weeks)\nPhase 6: Security and privacy (2 weeks)",
+                timeline: "4-5 months",
+                complexity: "Medium",
+                impactLevel: "High",
+                detailedTechStack: "Django 4.x, PostgreSQL, Django REST Framework, NLP models, Chatbot frameworks, NLTK, spaCy, React, Material-UI, WebSocket, Chat systems, Data visualization, Reports, Security features, Privacy compliance, Mental health APIs",
+                estimatedCost: "$25,000 - $35,000",
+                teamSize: "6-7 developers",
+                keyFeatures: "AI chatbot, Confidential booking, Peer support, Resource hub, Analytics dashboard, Mental health compliance"
+            }
+        ];
+
+        function populateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            technicalSolutions.forEach(solution => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${solution.problemId}</strong></td>
+                    <td><strong>${solution.title}</strong></td>
+                    <td class="description-cell">${solution.ourSolution}</td>
+                    <td class="tech-stack">${solution.techStack}</td>
+                    <td class="description-cell">${solution.implementationSteps}</td>
+                    <td>${solution.timeline}</td>
+                    <td class="complexity-${solution.complexity.toLowerCase()}">${solution.complexity}</td>
+                    <td class="impact-${solution.impactLevel.toLowerCase()}">${solution.impactLevel}</td>
+                `;
+            });
+        }
+
+        function downloadExcel() {
+            try {
+                const excelData = technicalSolutions.map(solution => ({
+                    'Problem ID': solution.problemId,
+                    'Problem Title': solution.title,
+                    'Ministry/Department': getMinistry(solution.problemId),
+                    'Target Audience': getTargetAudience(solution.problemId),
+                    'Problem Description': getProblemDescription(solution.problemId),
+                    'Our Solution Approach': solution.ourSolution,
+                    'Detailed Technology Stack': solution.detailedTechStack,
+                    'Frontend Technologies': getFrontendTech(solution.detailedTechStack),
+                    'Backend Technologies': getBackendTech(solution.detailedTechStack),
+                    'ML/AI Technologies': getMLTech(solution.detailedTechStack),
+                    'Database & Storage': getDatabaseTech(solution.detailedTechStack),
+                    'Implementation Steps': solution.implementationSteps,
+                    'Timeline': solution.timeline,
+                    'Complexity Level': solution.complexity,
+                    'Impact Level': solution.impactLevel,
+                    'Estimated Cost': solution.estimatedCost,
+                    'Team Size Required': solution.teamSize,
+                    'Key Features': solution.keyFeatures,
+                    'Development Phases': getPhases(solution.implementationSteps),
+                    'Technical Challenges': getTechnicalChallenges(solution.problemId),
+                    'Risk Factors': getRiskFactors(solution.complexity),
+                    'Success Metrics': getSuccessMetrics(solution.problemId),
+                    'Scalability Considerations': getScalabilityConsiderations(solution.problemId),
+                    'Maintenance Requirements': getMaintenanceRequirements(solution.complexity),
+                    'Deployment Strategy': getDeploymentStrategy(solution.problemId),
+                    'Security Considerations': getSecurityConsiderations(solution.problemId)
+                }));
+                
+                const ws = XLSX.utils.json_to_sheet(excelData);
+                
+                // Set column widths for better readability
+                const colWidths = [
+                    { wch: 12 }, // Problem ID
+                    { wch: 35 }, // Problem Title
+                    { wch: 25 }, // Ministry
+                    { wch: 40 }, // Target Audience
+                    { wch: 60 }, // Problem Description
+                    { wch: 50 }, // Solution Approach
+                    { wch: 60 }, // Detailed Tech Stack
+                    { wch: 30 }, // Frontend
+                    { wch: 30 }, // Backend
+                    { wch: 30 }, // ML/AI
+                    { wch: 25 }, // Database
+                    { wch: 80 }, // Implementation Steps
+                    { wch: 15 }, // Timeline
+                    { wch: 15 }, // Complexity
+                    { wch: 15 }, // Impact
+                    { wch: 20 }, // Cost
+                    { wch: 15 }, // Team Size
+                    { wch: 50 }, // Key Features
+                    { wch: 40 }, // Development Phases
+                    { wch: 50 }, // Technical Challenges
+                    { wch: 40 }, // Risk Factors
+                    { wch: 40 }, // Success Metrics
+                    { wch: 50 }, // Scalability
+                    { wch: 40 }, // Maintenance
+                    { wch: 40 }, // Deployment
+                    { wch: 40 }  // Security
+                ];
+                ws['!cols'] = colWidths;
+                
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Technical Solutions");
+                
+                // Add summary sheet
+                const summaryData = [
+                    { Metric: "Total Problems Analyzed", Value: technicalSolutions.length },
+                    { Metric: "High Impact Solutions", Value: technicalSolutions.filter(s => s.impactLevel === "High").length },
+                    { Metric: "High Complexity Solutions", Value: technicalSolutions.filter(s => s.complexity === "High").length },
+                    { Metric: "Average Timeline", Value: "4-6 months" },
+                    { Metric: "Technologies Covered", Value: "45+ different technologies" },
+                    { Metric: "Estimated Total Investment", Value: "$300,000 - $500,000" },
+                    { Metric: "Total Developer Resources", Value: "90-110 developers" }
+                ];
+                const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(wb, summaryWs, "Executive Summary");
+                
+                // Add technology breakdown sheet
+                const techBreakdown = getTechnologyBreakdown();
+                const techWs = XLSX.utils.json_to_sheet(techBreakdown);
+                XLSX.utils.book_append_sheet(wb, techWs, "Technology Breakdown");
+                
+                XLSX.writeFile(wb, 'SIH_Technical_Solutions_Comprehensive.xlsx');
+                
+                alert('Excel file downloaded successfully! Check your downloads folder.');
+            } catch (error) {
+                console.error('Error generating Excel:', error);
+                alert('Error generating Excel file. Please try again.');
+            }
+        }
+
+        // Helper functions to extract additional details
+        function getMinistry(problemId) {
+            const ministryMap = {
+                'PS001': 'Ministry of Education',
+                'PS002': 'Ministry of Education',
+                'PS003': 'Ministry of AYUSH',
+                'PS004': 'Ministry of Education',
+                'PS005': 'Ministry of Corporate Affairs',
+                'PS006': 'Ministry of Earth Sciences',
+                'PS007': 'Ministry of Education',
+                'PS008': 'Ministry of Consumer Affairs',
+                'PS009': 'Ministry of Jal Shakti',
+                'PS010': 'Ministry of Coal',
+                'PS011': 'Ministry of Youth Affairs and Sports',
+                'PS012': 'Ministry of Health and Family Welfare',
+                'PS013': 'Ministry of Education',
+                'PS014': 'Ministry of Culture',
+                'PS015': 'Ministry of Education'
+            };
+            return ministryMap[problemId] || 'Not specified';
+        }
+
+        function getTargetAudience(problemId) {
+            const audienceMap = {
+                'PS001': 'School administrators, Teachers, Students, Government education departments',
+                'PS002': 'Students, Teachers, College administrators, Career counselors',
+                'PS003': 'Farmers, Processors, Consumers, Regulatory bodies, Healthcare providers',
+                'PS004': 'Educational institutions, Employers, Government bodies, Students',
+                'PS005': 'MCA officials, Stakeholders, Legal experts, Policy makers',
+                'PS006': 'Ocean researchers, Policy makers, Students, Marine professionals',
+                'PS007': 'Rural school students, Teachers, Education administrators',
+                'PS008': 'Legal Metrology officers, Traders, Consumers, Regulatory bodies',
+                'PS009': 'Property owners, Communities, Water conservation agencies',
+                'PS010': 'Mine planners, Safety officers, Mining companies, Regulatory authorities',
+                'PS011': 'Aspiring athletes, Sports coaches, SAI officials, Talent scouts',
+                'PS012': 'Migrant workers, Healthcare providers, Public health officials',
+                'PS013': 'Rural college students, City-based faculty, Educational institutions',
+                'PS014': 'Cultural researchers, Artists, Students, Heritage organizations',
+                'PS015': 'College students, Campus counselors, Mental health professionals'
+            };
+            return audienceMap[problemId] || 'General public';
+        }
+
+        function getProblemDescription(problemId) {
+            const descriptionMap = {
+                'PS001': 'Rural schools rely on manual attendance systems, causing time loss and errors in government reporting',
+                'PS002': 'Manual attendance and unproductive free periods affect student development and administrative efficiency',
+                'PS003': 'Fragmented Ayurvedic herb supply chain lacks traceability and quality assurance',
+                'PS004': 'Increasing fake degrees and certificates threaten academic integrity and employment trust',
+                'PS005': 'Large volume of policy consultation comments risk being overlooked without systematic analysis',
+                'PS006': 'Complex oceanographic data requires technical expertise, limiting accessibility to non-technical users',
+                'PS007': 'Rural students lack engaging STEM educational resources and face connectivity challenges',
+                'PS008': 'Tampering with weighing and measuring instruments enables fraudulent trade practices',
+                'PS009': 'Limited access to rainwater harvesting feasibility assessment tools for individuals',
+                'PS010': 'Rockfall incidents in mines threaten safety and lack predictive monitoring systems',
+                'PS011': 'Sports talent identification limited by geographic barriers and lack of standardized assessment',
+                'PS012': 'Migrant population lacks comprehensive health records, creating disease transmission risks',
+                'PS013': 'Rural colleges face connectivity issues preventing effective remote learning delivery',
+                'PS014': 'Traditional Kolam designs need systematic analysis and digital preservation',
+                'PS015': 'Mental health issues among college students lack accessible, stigma-free support systems'
+            };
+            return descriptionMap[problemId] || 'Problem description not available';
+        }
+
+        function getFrontendTech(techStack) {
+            const frontend = [];
+            if (techStack.includes('React')) frontend.push('React.js');
+            if (techStack.includes('React Native')) frontend.push('React Native');
+            if (techStack.includes('Material-UI')) frontend.push('Material-UI');
+            if (techStack.includes('Redux')) frontend.push('Redux');
+            if (techStack.includes('TypeScript')) frontend.push('TypeScript');
+            if (techStack.includes('PWA')) frontend.push('Progressive Web App');
+            if (techStack.includes('Streamlit')) frontend.push('Streamlit');
+            if (techStack.includes('HTML5')) frontend.push('HTML5/CSS3');
+            return frontend.join(', ') || 'Web-based interface';
+        }
+
+        function getBackendTech(techStack) {
+            const backend = [];
+            if (techStack.includes('Python')) backend.push('Python');
+            if (techStack.includes('FastAPI')) backend.push('FastAPI');
+            if (techStack.includes('Django')) backend.push('Django');
+            if (techStack.includes('Node.js')) backend.push('Node.js');
+            if (techStack.includes('Express')) backend.push('Express.js');
+            return backend.join(', ') || 'RESTful API';
+        }
+
+        function getMLTech(techStack) {
+            const ml = [];
+            if (techStack.includes('TensorFlow')) ml.push('TensorFlow');
+            if (techStack.includes('OpenCV')) ml.push('OpenCV');
+            if (techStack.includes('scikit-learn')) ml.push('scikit-learn');
+            if (techStack.includes('NLTK')) ml.push('NLTK');
+            if (techStack.includes('spaCy')) ml.push('spaCy');
+            if (techStack.includes('LangChain')) ml.push('LangChain');
+            return ml.join(', ') || 'Machine Learning components';
+        }
+
+        function getDatabaseTech(techStack) {
+            const db = [];
+            if (techStack.includes('PostgreSQL')) db.push('PostgreSQL');
+            if (techStack.includes('MongoDB')) db.push('MongoDB');
+            if (techStack.includes('Redis')) db.push('Redis');
+            if (techStack.includes('ChromaDB')) db.push('ChromaDB');
+            if (techStack.includes('IPFS')) db.push('IPFS');
+            return db.join(', ') || 'Database system';
+        }
+
+        function getPhases(steps) {
+            const phases = steps.split('\n').length;
+            return `${phases} development phases over timeline`;
+        }
+
+        function getTechnicalChallenges(problemId) {
+            const challenges = {
+                'PS001': 'Facial recognition accuracy in varying lighting, Offline data synchronization, RFID integration reliability',
+                'PS002': 'Multi-modal attendance fusion, Real-time data processing, AI recommendation accuracy',
+                'PS003': 'Blockchain scalability, IoT sensor reliability, Smart contract complexity',
+                'PS004': 'OCR accuracy across document types, AI model training data quality, Blockchain integration',
+                'PS005': 'NLP model fine-tuning, Large text processing, Sentiment accuracy across languages',
+                'PS006': 'NetCDF data complexity, LLM integration, Real-time query processing',
+                'PS007': 'Offline functionality, Low-bandwidth optimization, Gamification engagement',
+                'PS008': 'Hardware sensor reliability, Real-time anomaly detection, Blockchain logging',
+                'PS009': 'GIS data accuracy, Weather API reliability, Calculation algorithm validation',
+                'PS010': 'Multi-sensor data fusion, Real-time processing, Predictive model accuracy',
+                'PS011': 'Computer vision accuracy, Mobile optimization, Cheat detection reliability',
+                'PS012': 'Health data privacy, System integration, Multilingual support',
+                'PS013': 'Low-bandwidth streaming, Audio quality optimization, P2P reliability',
+                'PS014': 'Pattern recognition accuracy, Mathematical modeling complexity, Cultural validation',
+                'PS015': 'AI chatbot training, Mental health compliance, Privacy protection'
+            };
+            return challenges[problemId] || 'Standard development challenges';
+        }
+
+        function getRiskFactors(complexity) {
+            const risks = {
+                'High': 'Technical complexity, Integration challenges, Performance optimization, Security vulnerabilities',
+                'Medium': 'Timeline delays, Resource allocation, Quality assurance, User adoption',
+                'Low': 'Minor technical issues, Testing requirements, Documentation needs'
+            };
+            return risks[complexity] || 'Standard project risks';
+        }
+
+        function getSuccessMetrics(problemId) {
+            const metrics = {
+                'PS001': 'Attendance accuracy >95%, Time savings >60%, Government integration success',
+                'PS002': 'Student engagement increase 15%, Attendance automation 100%, Task completion rates',
+                'PS003': 'End-to-end traceability, Consumer adoption rate, Supply chain transparency',
+                'PS004': 'Detection accuracy >90%, Processing speed, False positive rate <5%',
+                'PS005': 'Processing time reduction 80%, Sentiment accuracy >85%, Summary quality',
+                'PS006': 'Query response time, Data accessibility, User satisfaction',
+                'PS007': 'Student engagement 15% increase, Offline usage, Learning outcomes',
+                'PS008': 'Tamper detection accuracy >95%, Alert response time, False alarm rate <2%',
+                'PS009': 'Calculation accuracy, User adoption, Cost estimation precision',
+                'PS010': 'Prediction accuracy, Alert timeliness, Safety incident reduction',
+                'PS011': 'Performance measurement accuracy, Cheat detection rate, User adoption',
+                'PS012': 'Health record completeness, Disease surveillance effectiveness, System adoption',
+                'PS013': 'Connection stability, Audio quality, Bandwidth efficiency',
+                'PS014': 'Pattern recognition accuracy, Design recreation quality, Cultural validation',
+                'PS015': 'User engagement, Mental health outcomes, System utilization'
+            };
+            return metrics[problemId] || 'User satisfaction and system performance';
+        }
+
+        function getScalabilityConsiderations(problemId) {
+            return 'Cloud infrastructure, Database optimization, Load balancing, Microservices architecture, Caching strategies';
+        }
+
+        function getMaintenanceRequirements(complexity) {
+            const maintenance = {
+                'High': 'Regular model updates, Security patches, Performance monitoring, 24/7 support',
+                'Medium': 'Periodic updates, Bug fixes, Performance optimization, Regular backups',
+                'Low': 'Basic maintenance, Security updates, User support, Data backups'
+            };
+            return maintenance[complexity] || 'Standard maintenance';
+        }
+
+        function getDeploymentStrategy(problemId) {
+            return 'Phased rollout, Pilot testing, Cloud deployment, CI/CD pipeline, Monitoring setup';
+        }
+
+        function getSecurityConsiderations(problemId) {
+            return 'Data encryption, Authentication, Authorization, Privacy compliance, Security auditing';
+        }
+
+        function getTechnologyBreakdown() {
+            return [
+                { Category: 'Programming Languages', Technologies: 'Python, JavaScript, TypeScript, Go, HTML/CSS' },
+                { Category: 'Frontend Frameworks', Technologies: 'React.js, React Native, Material-UI, Redux, PWA' },
+                { Category: 'Backend Frameworks', Technologies: 'FastAPI, Django, Node.js, Express.js' },
+                { Category: 'Databases', Technologies: 'PostgreSQL, MongoDB, Redis, ChromaDB, IPFS' },
+                { Category: 'Machine Learning', Technologies: 'TensorFlow, PyTorch, OpenCV, scikit-learn, NLTK, spaCy' },
+                { Category: 'Blockchain', Technologies: 'Hyperledger Fabric, Smart Contracts, Web3.js' },
+                { Category: 'Cloud & DevOps', Technologies: 'AWS, GCP, Docker, Kubernetes, CI/CD' },
+                { Category: 'IoT & Hardware', Technologies: 'Raspberry Pi, Arduino, ESP32, Sensors, RFID' },
+                { Category: 'Visualization', Technologies: 'D3.js, Chart.js, Plotly, Mapbox, Three.js' },
+                { Category: 'Mobile Development', Technologies: 'React Native, TensorFlow Lite, Expo' }
+            ];
+        }
+
+        // Initialize the table when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            populateTable();
+        });
+    </script>
+</body>
+</html>
