@@ -9,3 +9,4 @@ fpdf
 shapely
 geopandas
 requests
+reportlab
