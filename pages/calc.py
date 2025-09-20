@@ -1271,8 +1271,12 @@ class HydroAssessPDF(FPDF):
                 color=(46, 204, 113)
             )
 
+# #############################################################################
+# ##### CORRECTED PDF GENERATION FUNCTION STARTS HERE #####
+# #############################################################################
+
 def generate_pdf_report(params, recommendation, design_financial, site_data, charts: Optional[Dict[str, plt.Figure]] = None):
-    """Generate comprehensive PDF report."""
+    """Generate comprehensive PDF report without writing temporary files."""
     pdf = HydroAssessPDF()
     pdf.add_page()
     
@@ -1399,71 +1403,47 @@ def generate_pdf_report(params, recommendation, design_financial, site_data, cha
         color=(155, 89, 182)
     )
     
-    # Embed charts page if available
+    # --- FIX 1: HANDLE CHARTS IN MEMORY ---
     if charts:
         pdf.add_page()
         pdf.chapter_title("HYDROLOGICAL & FINANCIAL ANALYTICS")
-        try:
-            if charts.get('rainfall_chart') is not None:
-                buf = io.BytesIO()
+
+        # Process rainfall chart in memory
+        if charts.get('rainfall_chart') is not None:
+            with io.BytesIO() as buf:
                 charts['rainfall_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
                 buf.seek(0)
-                with open('temp_rainfall.png', 'wb') as f:
-                    f.write(buf.getvalue())
-                pdf.image('temp_rainfall.png', x=10, w=190)
-                pdf.ln(5)
-            if charts.get('cost_chart') is not None:
-                buf = io.BytesIO()
+                pdf.image(buf, x=10, w=190, type='PNG') # Pass buffer directly
+            pdf.ln(5)
+
+        # Process cost chart in memory
+        if charts.get('cost_chart') is not None:
+            with io.BytesIO() as buf:
                 charts['cost_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
                 buf.seek(0)
-                with open('temp_cost.png', 'wb') as f:
-                    f.write(buf.getvalue())
-                pdf.image('temp_cost.png', x=10, w=95)
-            if charts.get('savings_chart') is not None:
-                buf = io.BytesIO()
+                pdf.image(buf, x=10, w=95, type='PNG') # Pass buffer directly
+
+        # Process savings chart in memory
+        if charts.get('savings_chart') is not None:
+            with io.BytesIO() as buf:
                 charts['savings_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
                 buf.seek(0)
-                with open('temp_savings.png', 'wb') as f:
-                    f.write(buf.getvalue())
-                pdf.image('temp_savings.png', x=110, w=95)
-        finally:
-            for tmp in ['temp_rainfall.png', 'temp_cost.png', 'temp_savings.png']:
-                if os.path.exists(tmp):
-                    try:
-                        os.remove(tmp)
-                    except Exception:
-                        pass
-    
-    # Fix encoding issue - Handle different FPDF versions
+                pdf.image(buf, x=110, w=95, type='PNG') # Pass buffer directly
+
+    # --- FIX 2: SIMPLIFY PDF OUTPUT ---
+    # The modern fpdf2 library outputs bytes directly. No need for complex encoding checks.
     try:
-        # For fpdf2 (newer version) - returns bytes directly
-        pdf_output = pdf.output()
-        if isinstance(pdf_output, (bytes, bytearray)):
-            return bytes(pdf_output)
-        elif isinstance(pdf_output, str):
-            return pdf_output.encode('latin-1')
-        else:
-            # Fallback - try to get as string first
-            pdf_string = pdf.output(dest='S')
-            if isinstance(pdf_string, str):
-                return pdf_string.encode('latin-1')
-            return bytes(pdf_string)
+        # This returns a bytearray or bytes, which is what st.download_button expects
+        return pdf.output()
     except Exception as e:
-        # Fallback method for older FPDF versions
-        try:
-            pdf_string = pdf.output(dest='S')
-            if isinstance(pdf_string, str):
-                return pdf_string.encode('latin-1')
-            return bytes(pdf_string)
-        except Exception:
-            # Last resort - save to file and read back
-            import tempfile
-            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp_file:
-                pdf.output(tmp_file.name)
-                with open(tmp_file.name, 'rb') as f:
-                    pdf_bytes = f.read()
-                os.unlink(tmp_file.name)
-                return pdf_bytes
+        # Fallback in case of an unexpected error during the final output stage
+        st.error(f"Failed during the final PDF output stage: {e}")
+        return b"" # Return empty bytes to prevent downstream errors
+        
+# #############################################################################
+# ##### CORRECTED PDF GENERATION FUNCTION ENDS HERE #####
+# #############################################################################
+
 
 # --- STREAMLIT UI ---
 
