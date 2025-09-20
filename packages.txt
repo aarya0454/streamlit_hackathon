@@ -1,0 +1,11 @@
+streamlit
+streamlit-folium
+folium
+streamlit-geolocation
+pandas
+numpy
+matplotlib
+fpdf
+shapely
+geopandas
+requests

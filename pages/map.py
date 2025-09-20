@@ -464,7 +464,7 @@ st.title("Interactive Satellite Map with Area Calculation")
 col1, col2 = st.columns([1, 1])
 with col1:
     if st.button("🏠 Back to Home — Return to Dashboard", use_container_width=True, help="Go back to the main Hydro‑Assess page"):
-        st.switch_page("index")
+        st.switch_page("index.py")
 with col2:
     if st.button("⚙️ Open Calculator — Start Assessment", use_container_width=True, help="Open the intelligent recommendation engine to analyze this area"):
         st.switch_page("pages/calc.py")
