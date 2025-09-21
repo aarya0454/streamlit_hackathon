@@ -5,7 +5,7 @@ streamlit-geolocation
 pandas
 numpy
 matplotlib
-fpdf
+fpdf2
 shapely
 geopandas
 requests
