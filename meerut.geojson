@@ -1,0 +1,70 @@
+{
+  "type": "FeatureCollection",
+  "name": "Meerut Groundwater Data",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Ghanta Ghar",
+        "description": "Clock tower in the heart of the city.",
+        "post_monsoon_depth_m": 12.5,
+        "principal_aquifer_type": "Alluvial Plains"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.7051,
+          28.9893
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Augharnath Mandir",
+        "description": "Historic temple, also known as Kali Paltan Mandir.",
+        "post_monsoon_depth_m": 14.2,
+        "principal_aquifer_type": "Alluvial Plains"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.6935,
+          28.9721
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gandhi Bagh",
+        "description": "Prominent park in Meerut Cantonment, also called Company Garden.",
+        "post_monsoon_depth_m": 13.8,
+        "principal_aquifer_type": "Alluvial Plains"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.6998,
+          28.9774
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Chaudhary Charan Singh University",
+        "description": "Public state university in Meerut.",
+        "post_monsoon_depth_m": 11.9,
+        "principal_aquifer_type": "Alluvial Plains"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.7342,
+          29.0065
+        ]
+      }
+    }
+  ]
+}

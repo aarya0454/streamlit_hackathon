@@ -256,56 +256,62 @@ def show_location_selection():
         st.markdown("#### Address/Place Search")
         search_query = st.text_input(
             "Enter address, place name, or landmark:",
-            placeholder="e.g., Delhi, India or Times Square, New York"
+            placeholder="e.g., IIT Delhi Campus, New Delhi"
         )
-        
-        # Show suggestions if available
-        if search_query and len(search_query) > 2:
-            if GOOGLE_API_KEY:
-                suggestions = get_place_suggestions(search_query, GOOGLE_API_KEY)
-                if suggestions:
-                    selected_suggestion = st.selectbox(
-                        "Suggestions:",
-                        options=[""] + suggestions
-                    )
-                    if selected_suggestion:
-                        search_query = selected_suggestion
-        
+
+        # Autocomplete suggestions (your existing code for this is fine)
+        if search_query and len(search_query) > 2 and GOOGLE_API_KEY:
+            suggestions = get_place_suggestions(search_query, GOOGLE_API_KEY)
+            if suggestions:
+                selected_suggestion = st.selectbox(
+                    "Suggestions:",
+                    options=[""] + suggestions,
+                    key="place_suggestion_box"
+                )
+                if selected_suggestion:
+                    search_query = selected_suggestion
+
+        # --- CORRECTED SEARCH LOGIC ---
+        # This section now handles all results consistently.
         if st.button("Search", use_container_width=True) and search_query:
             with st.spinner("Searching..."):
                 search_result = perform_search(search_query)
-                
+
+                # Unified logic: Always store results in a list in session_state
                 if search_result:
                     if search_result['type'] == 'single':
-                        # Direct result from Google
-                        result = search_result['data']
-                        latitude = result['lat']
-                        longitude = result['lng']
-                        selected_place = result
-                        st.success(f"Found: {result.get('address', 'Location found')}")
-                    else:
-                        # Multiple results from Nominatim
+                        # If one result, put it in a list
+                        st.session_state.map_search_results = [search_result['data']]
+                    else:  # 'multiple'
+                        # If multiple results, use the list directly
                         st.session_state.map_search_results = search_result['data']
-                        st.success(f"Found {len(search_result['data'])} results")
                 else:
                     st.error("Location not found. Try different search terms.")
-        
-        # Show search results if available
+                    st.session_state.map_search_results = []
+
+        # --- CORRECTED RESULT DISPLAY & SELECTION ---
+        # This section uses st.radio for a stable selection experience.
         if st.session_state.map_search_results:
-            st.markdown("##### Select from results:")
-            for idx, res in enumerate(st.session_state.map_search_results):
-                if st.button(
-                    f"{res['display_name'][:100]}...",
-                    key=f"search_result_{idx}",
-                    use_container_width=True
-                ):
-                    latitude = res['lat']
-                    longitude = res['lng']
-                    selected_place = res
-                    st.session_state.map_search_results = []  # Clear results
-                    st.success("Location selected!")
-                    st.rerun()
-    
+            # Create a dictionary of {display_name: full_result_object}
+            # This makes it easy to look up the full data from the user's selection.
+            options = {
+                (res.get('address') or res.get('display_name')): res
+                for res in st.session_state.map_search_results
+            }
+
+            # Let the user select a result using a radio button
+            selected_display_name = st.radio(
+                "Select from results:",
+                options.keys()
+            )
+
+            # Prepare the selected data for the 'Apply' button
+            if selected_display_name:
+                selected_result_data = options[selected_display_name]
+                latitude = selected_result_data['lat']
+                # Handle both 'lng' (from Google) and 'lon' (from Nominatim)
+                longitude = selected_result_data.get('lng') or selected_result_data.get('lon')
+                selected_place = selected_result_data
     elif location_method == "Enter Coordinates":
         st.markdown("#### Manual Coordinates")
         col1, col2 = st.columns(2)
