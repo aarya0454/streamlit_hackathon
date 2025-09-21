@@ -855,7 +855,8 @@ def generate_pdf_report(params, recommendation, design_financial, site_data, cha
     # --- FIX: SIMPLIFY AND ROBUSTLY OUTPUT PDF BYTES ---
     # Assuming `fpdf2` is in requirements.txt, this is the correct way.
     try:
-        return pdf.output()
+    # Explicitly convert the bytearray to bytes
+        return bytes(pdf.output())
     except Exception as e:
         st.error(f"Failed during the final PDF output stage: {e}")
         return b"" # Return empty bytes to prevent downstream errors
