@@ -209,24 +209,15 @@ st.markdown("""
         position: relative;
     }
     
-    /* Active Tab - Beautiful Blue with White Text */
+    /* Active Tab - Beautiful Blue Background */
     .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, 
             var(--primary-color) 0%, 
             #1e40af 100%) !important;
-        color: white !important;
         box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4), 
                     0 4px 12px rgba(37, 99, 235, 0.3), 
                     inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
         border: 2px solid var(--primary-color) !important;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
-    }
-    
-    /* Force white text with text-shadow for better visibility */
-    .stTabs [aria-selected="true"],
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: white !important;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
     }
     
     /* Active Tab Hover */
@@ -268,29 +259,66 @@ st.markdown("""
         font-weight: inherit !important;
     }
     
-    /* ACTIVE TAB TEXT - WHITE COLOR WITH MAXIMUM SPECIFICITY */
+    /* ACTIVE TAB TEXT - THEME AWARE COLORS */
+    
+    /* Light Mode Active Tab Text - Dark text for better contrast */
+    [data-theme="light"] .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
+    [data-theme="light"] .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
+    [data-theme="light"] .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div > div,
+    [data-theme="light"] .stTabs [data-baseweb="tab"][aria-selected="true"] span,
+    [data-theme="light"] .stTabs [data-baseweb="tab"][aria-selected="true"] p,
+    [data-theme="light"] .stTabs [data-baseweb="tab"][aria-selected="true"] *,
+    [data-theme="light"] .stTabs [aria-selected="true"] > div,
+    [data-theme="light"] .stTabs [aria-selected="true"] > div > div,
+    [data-theme="light"] .stTabs [aria-selected="true"] > div > div > div,
+    [data-theme="light"] .stTabs [aria-selected="true"] span,
+    [data-theme="light"] .stTabs [aria-selected="true"] p,
+    [data-theme="light"] .stTabs [aria-selected="true"] *,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div > div,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"][aria-selected="true"] span,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"][aria-selected="true"] p,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"][aria-selected="true"] *,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] > div,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] > div > div,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] > div > div > div,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] span,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] p,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] * {
+        color: #1e293b !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Dark Mode Active Tab Text - White text */
+    [data-theme="dark"] .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
+    [data-theme="dark"] .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
+    [data-theme="dark"] .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div > div,
+    [data-theme="dark"] .stTabs [data-baseweb="tab"][aria-selected="true"] span,
+    [data-theme="dark"] .stTabs [data-baseweb="tab"][aria-selected="true"] p,
+    [data-theme="dark"] .stTabs [data-baseweb="tab"][aria-selected="true"] *,
+    [data-theme="dark"] .stTabs [aria-selected="true"] > div,
+    [data-theme="dark"] .stTabs [aria-selected="true"] > div > div,
+    [data-theme="dark"] .stTabs [aria-selected="true"] > div > div > div,
+    [data-theme="dark"] .stTabs [aria-selected="true"] span,
+    [data-theme="dark"] .stTabs [aria-selected="true"] p,
+    [data-theme="dark"] .stTabs [aria-selected="true"] * {
+        color: white !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Fallback for systems without theme detection - use dark text by default */
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div > div,
     .stTabs [data-baseweb="tab"][aria-selected="true"] span,
     .stTabs [data-baseweb="tab"][aria-selected="true"] p,
-    .stTabs [data-baseweb="tab"][aria-selected="true"] *,
     .stTabs [aria-selected="true"] > div,
     .stTabs [aria-selected="true"] > div > div,
     .stTabs [aria-selected="true"] > div > div > div,
     .stTabs [aria-selected="true"] span,
-    .stTabs [aria-selected="true"] p,
-    .stTabs [aria-selected="true"] * {
-        color: white !important;
-        font-weight: 700 !important;
-    }
-    
-    /* Additional specific overrides for Streamlit's tab text elements */
-    .stTabs [aria-selected="true"] [data-testid],
-    .stTabs [aria-selected="true"] [class*="css"],
-    .stTabs [data-baseweb="tab"][aria-selected="true"] [data-testid],
-    .stTabs [data-baseweb="tab"][aria-selected="true"] [class*="css"] {
-        color: white !important;
+    .stTabs [aria-selected="true"] p {
+        color: #1e293b !important;
         font-weight: 700 !important;
     }
     
@@ -1751,9 +1779,11 @@ def main():
     recommendation = generate_recommendation(params)
     design_financial = calculate_design_and_cost(recommendation, params)
     
-    # Detect theme for chart styling
-    def get_theme_colors():
-        """Get colors based on Streamlit theme with manual override"""
+    # Detect theme for chart styling using Streamlit's internal theme system
+    def get_streamlit_theme_colors():
+        """Get colors based on Streamlit's active theme configuration"""
+        import streamlit as st
+        
         # Check manual theme selection first
         chart_theme = st.session_state.get('chart_theme', 'Auto (Match Streamlit)')
         
@@ -1761,17 +1791,41 @@ def main():
             return get_dark_theme_colors()
         elif chart_theme == 'Light Mode':
             return get_light_theme_colors()
-        else:  # Auto mode - try to detect Streamlit's theme
+        else:  # Auto mode - detect from Streamlit's theme
             try:
-                # Try to detect Streamlit's current theme
-                # This is a simplified detection - in practice, Streamlit's theme
-                # detection is more complex and depends on browser settings
+                # Try to access Streamlit's theme configuration
+                from streamlit import config
                 
-                # For now, we'll default to light mode when auto is selected
-                # Users can manually select Dark Mode if needed
-                return get_light_theme_colors()
+                # Get theme colors from Streamlit's config
+                bg_color = config.get_option('theme.backgroundColor')
+                text_color = config.get_option('theme.textColor')
+                primary_color = config.get_option('theme.primaryColor')
+                secondary_bg = config.get_option('theme.secondaryBackgroundColor')
                 
-            except:
+                # Determine if it's dark or light theme based on background color
+                if bg_color and bg_color.lower() in ['#1a1f2e', '#0e1117', '#262730']:
+                    # Dark theme detected
+                    return {
+                        'bg_color': bg_color or '#1A1F2E',
+                        'text_color': text_color or '#E8EAED',
+                        'grid_color': secondary_bg or '#242B3D',
+                        'primary_bar': primary_color or '#00D4FF',
+                        'secondary_bar': '#F59E0B',
+                        'edge_color': secondary_bg or '#242B3D'
+                    }
+                else:
+                    # Light theme detected
+                    return {
+                        'bg_color': bg_color or '#FAFBFC',
+                        'text_color': text_color or '#1E2329',
+                        'grid_color': secondary_bg or '#F0F2F5',
+                        'primary_bar': primary_color or '#0066CC',
+                        'secondary_bar': '#FFA500',
+                        'edge_color': text_color or '#1E2329'
+                    }
+                    
+            except Exception as e:
+                # Fallback: try to detect from CSS variables or default to light
                 return get_light_theme_colors()
     
     def get_dark_theme_colors():
@@ -1796,7 +1850,7 @@ def main():
             'edge_color': '#1E2329'
         }
     
-    theme_colors = get_theme_colors()
+    theme_colors = get_streamlit_theme_colors()
     
     # Build figures for analytics and PDF with theme-aware styling
     # Rainfall chart
@@ -1833,10 +1887,12 @@ def main():
     ax_cost.set_facecolor(theme_colors['bg_color'])
     
     if filtered_costs:
-        # Theme-aware professional color palette
-        if theme_colors['bg_color'] == '#0e1117':  # Dark mode
+        # Dynamic theme-aware professional color palette
+        is_dark_theme = theme_colors['bg_color'].lower() in ['#1a1f2e', '#0e1117', '#262730']
+        
+        if is_dark_theme:  # Dark mode colors - brighter and more vibrant
             custom_colors = [
-                '#4fc3f7',  # Light Blue
+                theme_colors['primary_bar'],  # Primary theme color
                 '#ffb74d',  # Light Orange
                 '#81c784',  # Light Green
                 '#f06292',  # Light Pink
@@ -1845,15 +1901,15 @@ def main():
                 '#ffcc02',  # Light Yellow
                 '#ff8a65',  # Light Deep Orange
             ]
-        else:  # Light mode
+        else:  # Light mode colors - deeper and more professional
             custom_colors = [
+                theme_colors['primary_bar'],  # Primary theme color
+                theme_colors['secondary_bar'],  # Secondary theme color
                 '#2E8B57',  # Sea Green
-                '#FFD700',  # Gold
                 '#4682B4',  # Steel Blue
                 '#FF6347',  # Tomato
                 '#9370DB',  # Medium Purple
                 '#20B2AA',  # Light Sea Green
-                '#FFA500',  # Orange
                 '#DC143C',  # Crimson
             ]
         
@@ -1912,9 +1968,15 @@ def main():
     net_annual = [s - m for s, m in zip(annual_savings_arr, annual_maintenance_arr)]
     cumulative_savings = np.cumsum(net_annual)
     
-    # Enhanced styling with theme colors
-    savings_color = '#4fc3f7' if theme_colors['bg_color'] == '#0e1117' else '#2E8B57'
-    investment_color = '#ff8a65' if theme_colors['bg_color'] == '#0e1117' else '#DC143C'
+    # Dynamic theme-aware colors for savings chart
+    is_dark_theme = theme_colors['bg_color'].lower() in ['#1a1f2e', '#0e1117', '#262730']
+    
+    if is_dark_theme:
+        savings_color = theme_colors['primary_bar']  # Use theme primary color
+        investment_color = '#ff8a65'  # Light orange for dark mode
+    else:
+        savings_color = theme_colors['primary_bar']  # Use theme primary color
+        investment_color = '#DC143C'  # Dark red for light mode
     
     bars = ax_save.bar(years, cumulative_savings, alpha=0.8, color=savings_color, 
                       label='Cumulative Net Savings', edgecolor=theme_colors['edge_color'], linewidth=1)
@@ -1927,7 +1989,8 @@ def main():
     investment = design_financial['total_cost']
     payback_year = next((i+1 for i, val in enumerate(cumulative_savings) if val >= investment), None)
     if payback_year and payback_year <= 10:
-        marker_color = '#ff8a65' if theme_colors['bg_color'] == '#0e1117' else '#DC143C'
+        # Use the same color as investment line for consistency
+        marker_color = investment_color
         ax_save.plot(payback_year, investment, 'o', color=marker_color, markersize=8, 
                     markeredgecolor='white', markeredgewidth=2)
         ax_save.annotate(f'Payback: Year {payback_year}', 
