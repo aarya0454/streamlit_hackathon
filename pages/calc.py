@@ -124,58 +124,64 @@ st.markdown("""
         border-color: var(--primary-color);
     }
     
-    /* Enhanced tabs with smooth transitions and better spacing - Light/Dark Mode Support */
+    /* Enhanced tabs with Streamlit theme detection and beautiful styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-        padding: 8px 12px;
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-        margin-bottom: 20px;
-        /* Light mode styling */
-        background: linear-gradient(135deg, rgba(240, 242, 247, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(200, 200, 200, 0.3);
+        gap: 15px;
+        padding: 10px 15px;
+        border-radius: 20px;
+        backdrop-filter: blur(15px);
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
     }
     
-    /* Dark mode styling for tab list */
-    @media (prefers-color-scheme: dark) {
-        .stTabs [data-baseweb="tab-list"] {
-            background: linear-gradient(135deg, rgba(128, 128, 128, 0.08) 0%, rgba(128, 128, 128, 0.03) 100%);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(128, 128, 128, 0.1);
-        }
+    /* Light mode tab list */
+    [data-theme="light"] .stTabs [data-baseweb="tab-list"],
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab-list"] {
+        background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.8) 100%);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(203, 213, 225, 0.4);
+    }
+    
+    /* Dark mode tab list */
+    [data-theme="dark"] .stTabs [data-baseweb="tab-list"] {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(71, 85, 105, 0.3);
     }
     
     .stTabs [data-baseweb="tab"] {
-        border-radius: 12px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 15px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         font-weight: 500;
-        padding: 12px 20px !important;
-        min-height: 48px !important;
+        padding: 14px 24px !important;
+        min-height: 52px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         flex: 1 !important;
         text-align: center !important;
         font-size: 14px !important;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
         position: relative;
         overflow: hidden;
-        /* Light mode styling */
-        background: rgba(255, 255, 255, 0.7);
-        color: #374151;
-        border: 1px solid rgba(200, 200, 200, 0.2);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(10px);
     }
     
-    /* Dark mode styling for tabs */
-    @media (prefers-color-scheme: dark) {
-        .stTabs [data-baseweb="tab"] {
-            background: rgba(55, 65, 81, 0.3);
-            color: #e5e7eb;
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
+    /* Light mode tabs */
+    [data-theme="light"] .stTabs [data-baseweb="tab"],
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"] {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%);
+        color: #334155;
+        border: 1px solid rgba(203, 213, 225, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Dark mode tabs */
+    [data-theme="dark"] .stTabs [data-baseweb="tab"] {
+        background: linear-gradient(135deg, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
+        color: #cbd5e1;
+        border: 1px solid rgba(71, 85, 105, 0.4);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
     
     .stTabs [data-baseweb="tab"]:before {
@@ -185,27 +191,29 @@ st.markdown("""
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s ease;
     }
     
     .stTabs [data-baseweb="tab"]:hover {
-        transform: translateY(-2px);
-        /* Light mode hover */
-        background: linear-gradient(135deg, rgba(249, 250, 251, 0.9) 0%, rgba(243, 244, 246, 0.8) 100%);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-        border-color: rgba(156, 163, 175, 0.4);
-        color: #1f2937;
+        transform: translateY(-3px) scale(1.02);
+    }
+    
+    /* Light mode hover */
+    [data-theme="light"] .stTabs [data-baseweb="tab"]:hover,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"]:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.9) 100%);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        border-color: rgba(148, 163, 184, 0.5);
+        color: #1e293b;
     }
     
     /* Dark mode hover */
-    @media (prefers-color-scheme: dark) {
-        .stTabs [data-baseweb="tab"]:hover {
-            background: linear-gradient(135deg, rgba(75, 85, 99, 0.4) 0%, rgba(55, 65, 81, 0.3) 100%);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            border-color: rgba(156, 163, 175, 0.3);
-            color: #f3f4f6;
-        }
+    [data-theme="dark"] .stTabs [data-baseweb="tab"]:hover {
+        background: linear-gradient(135deg, rgba(71, 85, 105, 0.7) 0%, rgba(51, 65, 85, 0.5) 100%);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border-color: rgba(100, 116, 139, 0.6);
+        color: #f1f5f9;
     }
     
     .stTabs [data-baseweb="tab"]:hover:before {
@@ -213,36 +221,43 @@ st.markdown("""
     }
     
     .stTabs [aria-selected="true"] {
-        transform: translateY(-1px);
-        animation: slideIn 0.3s ease;
-        font-weight: 600 !important;
-        /* Light mode active */
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+        transform: translateY(-2px) scale(1.05);
+        animation: slideIn 0.4s ease;
+        font-weight: 700 !important;
+        z-index: 10;
+        position: relative;
+    }
+    
+    /* Light mode active */
+    [data-theme="light"] .stTabs [aria-selected="true"],
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
         color: white !important;
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-        border-color: #3b82f6;
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4), 0 4px 15px rgba(29, 78, 216, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border-color: #2563eb;
     }
     
     /* Dark mode active */
-    @media (prefers-color-scheme: dark) {
-        .stTabs [aria-selected="true"] {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
-            border-color: #2563eb;
-        }
+    [data-theme="dark"] .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+        color: white !important;
+        box-shadow: 0 10px 30px rgba(30, 64, 175, 0.5), 0 4px 15px rgba(30, 58, 138, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border-color: #1e40af;
     }
     
     .stTabs [aria-selected="true"]:hover {
-        transform: translateY(-3px);
-        /* Light mode active hover */
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+        transform: translateY(-4px) scale(1.06);
+    }
+    
+    /* Light mode active hover */
+    [data-theme="light"] .stTabs [aria-selected="true"]:hover,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"]:hover {
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5), 0 6px 20px rgba(29, 78, 216, 0.4);
     }
     
     /* Dark mode active hover */
-    @media (prefers-color-scheme: dark) {
-        .stTabs [aria-selected="true"]:hover {
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
-        }
+    [data-theme="dark"] .stTabs [aria-selected="true"]:hover {
+        box-shadow: 0 15px 40px rgba(30, 64, 175, 0.6), 0 6px 20px rgba(30, 58, 138, 0.5);
     }
     
     /* Ensure tabs container takes full width */
@@ -1596,6 +1611,15 @@ def main():
     
     st.sidebar.markdown("---")
     st.sidebar.header("🛰️ Data Enhancements")
+    
+    # Chart theme selector
+    chart_theme = st.sidebar.selectbox(
+        "📊 Chart Theme",
+        ["Auto (Match Streamlit)", "Light Mode", "Dark Mode"],
+        index=0,
+        help="Choose how charts should be styled"
+    )
+    st.session_state.chart_theme = chart_theme
     try:
         from streamlit_geolocation import streamlit_geolocation  # type: ignore
         loc = streamlit_geolocation()
@@ -1725,38 +1749,109 @@ def main():
     recommendation = generate_recommendation(params)
     design_financial = calculate_design_and_cost(recommendation, params)
     
-    # Build figures for analytics and PDF
+    # Detect theme for chart styling
+    def get_theme_colors():
+        """Get colors based on Streamlit theme with manual override"""
+        # Check manual theme selection first
+        chart_theme = st.session_state.get('chart_theme', 'Auto (Match Streamlit)')
+        
+        if chart_theme == 'Dark Mode':
+            return get_dark_theme_colors()
+        elif chart_theme == 'Light Mode':
+            return get_light_theme_colors()
+        else:  # Auto mode - try to detect Streamlit's theme
+            try:
+                # Try to detect Streamlit's current theme
+                # This is a simplified detection - in practice, Streamlit's theme
+                # detection is more complex and depends on browser settings
+                
+                # For now, we'll default to light mode when auto is selected
+                # Users can manually select Dark Mode if needed
+                return get_light_theme_colors()
+                
+            except:
+                return get_light_theme_colors()
+    
+    def get_dark_theme_colors():
+        return {
+            'bg_color': '#0e1117',
+            'text_color': '#fafafa',
+            'grid_color': '#262730',
+            'primary_bar': '#4fc3f7',
+            'secondary_bar': '#ff9800',
+            'edge_color': '#262730'
+        }
+    
+    def get_light_theme_colors():
+        return {
+            'bg_color': '#ffffff',
+            'text_color': '#262730',
+            'grid_color': '#e0e0e0',
+            'primary_bar': '#1f77b4',
+            'secondary_bar': '#ff7f0e',
+            'edge_color': '#333333'
+        }
+    
+    theme_colors = get_theme_colors()
+    
+    # Build figures for analytics and PDF with theme-aware styling
     # Rainfall chart
     fig_rain, ax_rain = plt.subplots(figsize=(10, 6))
+    fig_rain.patch.set_facecolor(theme_colors['bg_color'])
+    ax_rain.set_facecolor(theme_colors['bg_color'])
+    
     months = list(monthly_rainfall.keys())
     values = list(monthly_rainfall.values())
-    colors = ['#1f77b4' if v >= (np.mean(values) if len(values) else 0) else '#ff7f0e' for v in values]
-    bars = ax_rain.bar(months, values, color=colors, edgecolor='black', linewidth=1)
-    ax_rain.set_xlabel('Month', fontsize=12, fontweight='bold')
-    ax_rain.set_ylabel('Rainfall (mm)', fontsize=12, fontweight='bold')
-    ax_rain.set_title('Monthly Rainfall Distribution (2023)', fontsize=14, fontweight='bold')
-    ax_rain.grid(axis='y', alpha=0.3, linestyle='--')
+    colors = [theme_colors['primary_bar'] if v >= (np.mean(values) if len(values) else 0) else theme_colors['secondary_bar'] for v in values]
+    bars = ax_rain.bar(months, values, color=colors, edgecolor=theme_colors['edge_color'], linewidth=1, alpha=0.8)
+    
+    ax_rain.set_xlabel('Month', fontsize=12, fontweight='bold', color=theme_colors['text_color'])
+    ax_rain.set_ylabel('Rainfall (mm)', fontsize=12, fontweight='bold', color=theme_colors['text_color'])
+    ax_rain.set_title('Monthly Rainfall Distribution (2023)', fontsize=14, fontweight='bold', color=theme_colors['text_color'])
+    ax_rain.grid(axis='y', alpha=0.3, linestyle='--', color=theme_colors['grid_color'])
+    ax_rain.tick_params(colors=theme_colors['text_color'])
+    ax_rain.spines['bottom'].set_color(theme_colors['text_color'])
+    ax_rain.spines['left'].set_color(theme_colors['text_color'])
+    ax_rain.spines['top'].set_visible(False)
+    ax_rain.spines['right'].set_visible(False)
+    
     for bar, value in zip(bars, values):
         height = bar.get_height()
-        ax_rain.text(bar.get_x() + bar.get_width()/2., height, f'{value:.0f}', ha='center', va='bottom', fontsize=9)
+        ax_rain.text(bar.get_x() + bar.get_width()/2., height, f'{value:.0f}', 
+                    ha='center', va='bottom', fontsize=9, color=theme_colors['text_color'], fontweight='bold')
     plt.tight_layout()
     
-    # Cost breakdown chart - Enhanced styling
+    # Cost breakdown chart - Enhanced styling with theme support
     costs = design_financial['cost_breakdown']
     filtered_costs = {k: v for k, v in costs.items() if v > 0}
     fig_cost, ax_cost = plt.subplots(figsize=(10, 8))
+    fig_cost.patch.set_facecolor(theme_colors['bg_color'])
+    ax_cost.set_facecolor(theme_colors['bg_color'])
+    
     if filtered_costs:
-        # Use the same professional color palette
-        custom_colors = [
-            '#2E8B57',  # Sea Green
-            '#FFD700',  # Gold
-            '#4682B4',  # Steel Blue
-            '#FF6347',  # Tomato
-            '#9370DB',  # Medium Purple
-            '#20B2AA',  # Light Sea Green
-            '#FFA500',  # Orange
-            '#DC143C',  # Crimson
-        ]
+        # Theme-aware professional color palette
+        if theme_colors['bg_color'] == '#0e1117':  # Dark mode
+            custom_colors = [
+                '#4fc3f7',  # Light Blue
+                '#ffb74d',  # Light Orange
+                '#81c784',  # Light Green
+                '#f06292',  # Light Pink
+                '#ba68c8',  # Light Purple
+                '#4db6ac',  # Light Teal
+                '#ffcc02',  # Light Yellow
+                '#ff8a65',  # Light Deep Orange
+            ]
+        else:  # Light mode
+            custom_colors = [
+                '#2E8B57',  # Sea Green
+                '#FFD700',  # Gold
+                '#4682B4',  # Steel Blue
+                '#FF6347',  # Tomato
+                '#9370DB',  # Medium Purple
+                '#20B2AA',  # Light Sea Green
+                '#FFA500',  # Orange
+                '#DC143C',  # Crimson
+            ]
         
         labels = [k.replace('_', ' ').title() for k in filtered_costs.keys()]
         values = list(filtered_costs.values())
@@ -1773,15 +1868,17 @@ def main():
             startangle=90,
             explode=[0.05 if v == max(values) else 0 for v in values],  # Explode the largest slice
             shadow=True,
-            wedgeprops=dict(width=0.8, edgecolor='white', linewidth=2)
+            wedgeprops=dict(width=0.8, edgecolor=theme_colors['edge_color'], linewidth=2)
         )
         
-        ax_cost.set_title('System Cost Distribution', fontsize=16, fontweight='bold', pad=20)
+        ax_cost.set_title('System Cost Distribution', fontsize=16, fontweight='bold', 
+                         pad=20, color=theme_colors['text_color'])
         
-        # Improve text styling
+        # Improve text styling with theme colors
         for text in texts:
             text.set_fontsize(11)
             text.set_fontweight('bold')
+            text.set_color(theme_colors['text_color'])
         
         for autotext in autotexts:
             autotext.set_color('white')
@@ -1791,48 +1888,68 @@ def main():
         # Add a legend with cost values
         legend_labels = [f'{label}: ₹{value/1000:.0f}K ({value/sum(values)*100:.1f}%)' 
                        for label, value in zip(labels, values)]
-        ax_cost.legend(wedges, legend_labels, title="Components", loc="center left", 
-                     bbox_to_anchor=(1, 0, 0.5, 1), fontsize=10)
+        legend = ax_cost.legend(wedges, legend_labels, title="Components", loc="center left", 
+                               bbox_to_anchor=(1, 0, 0.5, 1), fontsize=10)
+        legend.get_title().set_color(theme_colors['text_color'])
+        for text in legend.get_texts():
+            text.set_color(theme_colors['text_color'])
         
         ax_cost.axis('equal')
         plt.tight_layout()
     
-    # Savings projection chart - Enhanced styling
+    # Savings projection chart - Enhanced styling with theme support
     fig_save, ax_save = plt.subplots(figsize=(10, 6))
+    fig_save.patch.set_facecolor(theme_colors['bg_color'])
+    ax_save.set_facecolor(theme_colors['bg_color'])
+    
     years = list(range(1, 11))
     annual_savings_arr = [design_financial['annual_savings']] * 10
     annual_maintenance_arr = [design_financial['maintenance_cost_annual']] * 10
     net_annual = [s - m for s, m in zip(annual_savings_arr, annual_maintenance_arr)]
     cumulative_savings = np.cumsum(net_annual)
     
-    # Enhanced styling
-    bars = ax_save.bar(years, cumulative_savings, alpha=0.8, color='#2E8B57', 
-                      label='Cumulative Net Savings', edgecolor='white', linewidth=1)
+    # Enhanced styling with theme colors
+    savings_color = '#4fc3f7' if theme_colors['bg_color'] == '#0e1117' else '#2E8B57'
+    investment_color = '#ff8a65' if theme_colors['bg_color'] == '#0e1117' else '#DC143C'
+    
+    bars = ax_save.bar(years, cumulative_savings, alpha=0.8, color=savings_color, 
+                      label='Cumulative Net Savings', edgecolor=theme_colors['edge_color'], linewidth=1)
     
     # Add investment line with better styling
-    ax_save.axhline(y=design_financial['total_cost'], color='#DC143C', linestyle='--', 
+    ax_save.axhline(y=design_financial['total_cost'], color=investment_color, linestyle='--', 
                    linewidth=2.5, label='Initial Investment', alpha=0.9)
     
     # Find and mark payback period if within 10 years
     investment = design_financial['total_cost']
     payback_year = next((i+1 for i, val in enumerate(cumulative_savings) if val >= investment), None)
     if payback_year and payback_year <= 10:
-        ax_save.plot(payback_year, investment, 'ro', markersize=8, 
+        marker_color = '#ff8a65' if theme_colors['bg_color'] == '#0e1117' else '#DC143C'
+        ax_save.plot(payback_year, investment, 'o', color=marker_color, markersize=8, 
                     markeredgecolor='white', markeredgewidth=2)
         ax_save.annotate(f'Payback: Year {payback_year}', 
                         xy=(payback_year, investment),
                         xytext=(payback_year + 0.5, investment * 0.8),
-                        arrowprops=dict(arrowstyle='->', color='black'),
-                        fontsize=10, fontweight='bold')
+                        arrowprops=dict(arrowstyle='->', color=theme_colors['text_color']),
+                        fontsize=10, fontweight='bold', color=theme_colors['text_color'])
     
-    # Enhanced styling
-    ax_save.set_xlabel('Years', fontsize=12, fontweight='bold')
-    ax_save.set_ylabel('Amount (₹)', fontsize=12, fontweight='bold')
-    ax_save.set_title('10-Year Financial Projection', fontsize=14, fontweight='bold', pad=20)
+    # Enhanced styling with theme colors
+    ax_save.set_xlabel('Years', fontsize=12, fontweight='bold', color=theme_colors['text_color'])
+    ax_save.set_ylabel('Amount (₹)', fontsize=12, fontweight='bold', color=theme_colors['text_color'])
+    ax_save.set_title('10-Year Financial Projection', fontsize=14, fontweight='bold', 
+                     pad=20, color=theme_colors['text_color'])
     
-    # Style legend and grid
-    ax_save.legend(fontsize=10, framealpha=0.9)
-    ax_save.grid(True, alpha=0.3, linestyle='--')
+    # Style legend and grid with theme colors
+    ax_save.tick_params(colors=theme_colors['text_color'])
+    ax_save.spines['bottom'].set_color(theme_colors['text_color'])
+    ax_save.spines['left'].set_color(theme_colors['text_color'])
+    
+    legend = ax_save.legend(fontsize=10, framealpha=0.9)
+    legend.get_frame().set_facecolor(theme_colors['bg_color'])
+    legend.get_frame().set_edgecolor(theme_colors['text_color'])
+    for text in legend.get_texts():
+        text.set_color(theme_colors['text_color'])
+    
+    ax_save.grid(True, alpha=0.3, linestyle='--', color=theme_colors['grid_color'])
     
     # Remove top and right spines for cleaner look
     for spine in ['top', 'right']:
