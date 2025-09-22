@@ -219,6 +219,14 @@ st.markdown("""
                     0 4px 12px rgba(37, 99, 235, 0.3), 
                     inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
         border: 2px solid var(--primary-color) !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Force white text with text-shadow for better visibility */
+    .stTabs [aria-selected="true"],
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
     }
     
     /* Active Tab Hover */
@@ -263,12 +271,25 @@ st.markdown("""
     /* ACTIVE TAB TEXT - WHITE COLOR WITH MAXIMUM SPECIFICITY */
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
+    .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div > div,
     .stTabs [data-baseweb="tab"][aria-selected="true"] span,
     .stTabs [data-baseweb="tab"][aria-selected="true"] p,
+    .stTabs [data-baseweb="tab"][aria-selected="true"] *,
     .stTabs [aria-selected="true"] > div,
     .stTabs [aria-selected="true"] > div > div,
+    .stTabs [aria-selected="true"] > div > div > div,
     .stTabs [aria-selected="true"] span,
-    .stTabs [aria-selected="true"] p {
+    .stTabs [aria-selected="true"] p,
+    .stTabs [aria-selected="true"] * {
+        color: white !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Additional specific overrides for Streamlit's tab text elements */
+    .stTabs [aria-selected="true"] [data-testid],
+    .stTabs [aria-selected="true"] [class*="css"],
+    .stTabs [data-baseweb="tab"][aria-selected="true"] [data-testid],
+    .stTabs [data-baseweb="tab"][aria-selected="true"] [class*="css"] {
         color: white !important;
         font-weight: 700 !important;
     }
