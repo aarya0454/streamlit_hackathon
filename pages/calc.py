@@ -124,7 +124,7 @@ st.markdown("""
         border-color: var(--primary-color);
     }
     
-    /* Enhanced tabs with Streamlit theme detection and beautiful styling */
+    /* Enhanced tabs using Streamlit's native theme variables */
     .stTabs [data-baseweb="tab-list"] {
         gap: 15px;
         padding: 10px 15px;
@@ -132,21 +132,13 @@ st.markdown("""
         backdrop-filter: blur(15px);
         margin-bottom: 25px;
         transition: all 0.3s ease;
-    }
-    
-    /* Light mode tab list */
-    [data-theme="light"] .stTabs [data-baseweb="tab-list"],
-    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab-list"] {
-        background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.8) 100%);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        border: 1px solid rgba(203, 213, 225, 0.4);
-    }
-    
-    /* Dark mode tab list */
-    [data-theme="dark"] .stTabs [data-baseweb="tab-list"] {
-        background: linear-gradient(135deg, rgba(45, 55, 72, 0.9) 0%, rgba(26, 32, 44, 0.8) 100%);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(113, 128, 150, 0.4);
+        /* Use Streamlit's secondary background with enhanced styling */
+        background: linear-gradient(135deg, 
+            color-mix(in srgb, var(--secondary-background-color) 95%, var(--background-color) 5%) 0%, 
+            color-mix(in srgb, var(--secondary-background-color) 85%, var(--background-color) 15%) 100%);
+        box-shadow: 0 4px 20px color-mix(in srgb, var(--text-color) 8%, transparent 92%), 
+                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 50%, transparent 50%);
+        border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent 85%);
     }
     
     .stTabs [data-baseweb="tab"] {
@@ -167,21 +159,16 @@ st.markdown("""
         backdrop-filter: blur(10px);
     }
     
-    /* Light mode tabs */
-    [data-theme="light"] .stTabs [data-baseweb="tab"],
-    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"] {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%);
-        color: #334155;
-        border: 1px solid rgba(203, 213, 225, 0.3);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-    }
-    
-    /* Dark mode tabs */
-    [data-theme="dark"] .stTabs [data-baseweb="tab"] {
-        background: linear-gradient(135deg, rgba(71, 85, 105, 0.8) 0%, rgba(51, 65, 85, 0.7) 100%);
-        color: #e2e8f0;
-        border: 1px solid rgba(113, 128, 150, 0.5);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Individual tabs using Streamlit theme variables */
+    .stTabs [data-baseweb="tab"] {
+        /* Use Streamlit's background color with enhanced styling */
+        background: linear-gradient(135deg, 
+            color-mix(in srgb, var(--background-color) 90%, var(--secondary-background-color) 10%) 0%, 
+            color-mix(in srgb, var(--background-color) 75%, var(--secondary-background-color) 25%) 100%);
+        color: var(--text-color);
+        border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent 80%);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color) 6%, transparent 94%), 
+                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 70%, transparent 30%);
     }
     
     .stTabs [data-baseweb="tab"]:before {
@@ -199,21 +186,15 @@ st.markdown("""
         transform: translateY(-3px) scale(1.02);
     }
     
-    /* Light mode hover */
-    [data-theme="light"] .stTabs [data-baseweb="tab"]:hover,
-    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"]:hover {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.9) 100%);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        border-color: rgba(148, 163, 184, 0.5);
-        color: #1e293b;
-    }
-    
-    /* Dark mode hover */
-    [data-theme="dark"] .stTabs [data-baseweb="tab"]:hover {
-        background: linear-gradient(135deg, rgba(100, 116, 139, 0.9) 0%, rgba(71, 85, 105, 0.8) 100%);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        border-color: rgba(148, 163, 184, 0.7);
-        color: #f8fafc;
+    /* Hover states using Streamlit theme variables */
+    .stTabs [data-baseweb="tab"]:hover {
+        background: linear-gradient(135deg, 
+            color-mix(in srgb, var(--background-color) 95%, var(--secondary-background-color) 5%) 0%, 
+            color-mix(in srgb, var(--background-color) 80%, var(--secondary-background-color) 20%) 100%);
+        box-shadow: 0 8px 25px color-mix(in srgb, var(--text-color) 12%, transparent 88%), 
+                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 80%, transparent 20%);
+        border-color: color-mix(in srgb, var(--text-color) 30%, transparent 70%);
+        color: var(--text-color);
     }
     
     .stTabs [data-baseweb="tab"]:hover:before {
@@ -228,36 +209,26 @@ st.markdown("""
         position: relative;
     }
     
-    /* Light mode active */
-    [data-theme="light"] .stTabs [aria-selected="true"],
-    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    /* Active tab using Streamlit's primary color */
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, 
+            var(--primary-color) 0%, 
+            color-mix(in srgb, var(--primary-color) 85%, black 15%) 100%) !important;
         color: white !important;
-        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4), 0 4px 15px rgba(29, 78, 216, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        border-color: #2563eb;
-    }
-    
-    /* Dark mode active */
-    [data-theme="dark"] .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-        color: white !important;
-        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6), 0 4px 15px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        border-color: #3b82f6;
+        box-shadow: 0 10px 30px color-mix(in srgb, var(--primary-color) 40%, transparent 60%), 
+                    0 4px 15px color-mix(in srgb, var(--primary-color) 30%, transparent 70%), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border-color: var(--primary-color);
     }
     
     .stTabs [aria-selected="true"]:hover {
         transform: translateY(-4px) scale(1.06);
     }
     
-    /* Light mode active hover */
-    [data-theme="light"] .stTabs [aria-selected="true"]:hover,
-    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"]:hover {
-        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5), 0 6px 20px rgba(29, 78, 216, 0.4);
-    }
-    
-    /* Dark mode active hover */
-    [data-theme="dark"] .stTabs [aria-selected="true"]:hover {
-        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.7), 0 6px 20px rgba(37, 99, 235, 0.6);
+    /* Active tab hover using Streamlit's primary color */
+    .stTabs [aria-selected="true"]:hover {
+        box-shadow: 0 15px 40px color-mix(in srgb, var(--primary-color) 50%, transparent 50%), 
+                    0 6px 20px color-mix(in srgb, var(--primary-color) 40%, transparent 60%);
     }
     
     /* Ensure tabs container takes full width */
@@ -1773,23 +1744,25 @@ def main():
                 return get_light_theme_colors()
     
     def get_dark_theme_colors():
+        """Colors matching config_dark.toml"""
         return {
-            'bg_color': '#0e1117',
-            'text_color': '#fafafa',
-            'grid_color': '#262730',
-            'primary_bar': '#4fc3f7',
-            'secondary_bar': '#ff9800',
-            'edge_color': '#262730'
+            'bg_color': '#1A1F2E',  # backgroundColor from config_dark.toml
+            'text_color': '#E8EAED',  # textColor from config_dark.toml
+            'grid_color': '#242B3D',  # secondaryBackgroundColor from config_dark.toml
+            'primary_bar': '#00D4FF',  # primaryColor from config_dark.toml
+            'secondary_bar': '#F59E0B',  # Complementary amber color
+            'edge_color': '#242B3D'
         }
     
     def get_light_theme_colors():
+        """Colors matching config.toml"""
         return {
-            'bg_color': '#ffffff',
-            'text_color': '#262730',
-            'grid_color': '#e0e0e0',
-            'primary_bar': '#1f77b4',
-            'secondary_bar': '#ff7f0e',
-            'edge_color': '#333333'
+            'bg_color': '#FAFBFC',  # backgroundColor from config.toml
+            'text_color': '#1E2329',  # textColor from config.toml
+            'grid_color': '#F0F2F5',  # secondaryBackgroundColor from config.toml
+            'primary_bar': '#0066CC',  # primaryColor from config.toml
+            'secondary_bar': '#FFA500',  # Complementary orange color
+            'edge_color': '#1E2329'
         }
     
     theme_colors = get_theme_colors()
