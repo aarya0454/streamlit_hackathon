@@ -36,7 +36,7 @@ st.markdown("""
     
     /* Enhanced button styling with smooth transitions */
     .stButton > button {
-            color: red;
+        color: red;
         border-radius: 8px;
         font-weight: 500;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
