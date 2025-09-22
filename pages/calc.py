@@ -307,7 +307,7 @@ st.markdown("""
         font-weight: 700 !important;
     }
     
-    /* Fallback for systems without theme detection - use dark text by default */
+    /* Fallback for systems without theme detection - use white text for better visibility */
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
     .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div > div,
@@ -318,8 +318,16 @@ st.markdown("""
     .stTabs [aria-selected="true"] > div > div > div,
     .stTabs [aria-selected="true"] span,
     .stTabs [aria-selected="true"] p {
-        color: #1e293b !important;
+        color: white !important;
         font-weight: 700 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    /* Extra specificity for dark backgrounds - force white text */
+    .stTabs [data-baseweb="tab"][aria-selected="true"] *,
+    .stTabs [aria-selected="true"] * {
+        color: white !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
     }
     
     @keyframes slideIn {
@@ -1650,6 +1658,11 @@ def main():
         help="Choose how charts should be styled"
     )
     st.session_state.chart_theme = chart_theme
+    
+    # Show current theme info
+    st.sidebar.caption(f"Current selection: {chart_theme}")
+    if chart_theme == "Auto (Match Streamlit)":
+        st.sidebar.caption("💡 Try selecting 'Dark Mode' or 'Light Mode' manually if auto-detection isn't working")
     try:
         from streamlit_geolocation import streamlit_geolocation  # type: ignore
         loc = streamlit_geolocation()
@@ -1779,7 +1792,7 @@ def main():
     recommendation = generate_recommendation(params)
     design_financial = calculate_design_and_cost(recommendation, params)
     
-    # Detect theme for chart styling using Streamlit's internal theme system
+    # Simplified theme detection for charts
     def get_streamlit_theme_colors():
         """Get colors based on Streamlit's active theme configuration"""
         import streamlit as st
@@ -1791,22 +1804,25 @@ def main():
             return get_dark_theme_colors()
         elif chart_theme == 'Light Mode':
             return get_light_theme_colors()
-        else:  # Auto mode - detect from Streamlit's theme
+        else:  # Auto mode - use a more reliable detection method
             try:
                 # Try to access Streamlit's theme configuration
                 from streamlit import config
                 
-                # Get theme colors from Streamlit's config
+                # Get background color to determine theme
                 bg_color = config.get_option('theme.backgroundColor')
-                text_color = config.get_option('theme.textColor')
                 primary_color = config.get_option('theme.primaryColor')
+                text_color = config.get_option('theme.textColor')
                 secondary_bg = config.get_option('theme.secondaryBackgroundColor')
                 
-                # Determine if it's dark or light theme based on background color
-                if bg_color and bg_color.lower() in ['#1a1f2e', '#0e1117', '#262730']:
-                    # Dark theme detected
+                # Debug: Show what colors we're getting
+                st.sidebar.write(f"Debug - BG: {bg_color}, Primary: {primary_color}")
+                
+                # Check if it's dark theme based on background color
+                if bg_color and (bg_color.upper() == '#1A1F2E' or bg_color.upper() == '#0E1117'):
+                    # Dark theme detected - use config_dark.toml colors
                     return {
-                        'bg_color': bg_color or '#1A1F2E',
+                        'bg_color': bg_color,
                         'text_color': text_color or '#E8EAED',
                         'grid_color': secondary_bg or '#242B3D',
                         'primary_bar': primary_color or '#00D4FF',
@@ -1814,7 +1830,7 @@ def main():
                         'edge_color': secondary_bg or '#242B3D'
                     }
                 else:
-                    # Light theme detected
+                    # Light theme detected - use config.toml colors
                     return {
                         'bg_color': bg_color or '#FAFBFC',
                         'text_color': text_color or '#1E2329',
@@ -1825,7 +1841,8 @@ def main():
                     }
                     
             except Exception as e:
-                # Fallback: try to detect from CSS variables or default to light
+                # If config reading fails, default to light theme
+                st.sidebar.write(f"Config error: {e}")
                 return get_light_theme_colors()
     
     def get_dark_theme_colors():
