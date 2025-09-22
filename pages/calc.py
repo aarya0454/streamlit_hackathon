@@ -144,9 +144,9 @@ st.markdown("""
     
     /* Dark mode tab list */
     [data-theme="dark"] .stTabs [data-baseweb="tab-list"] {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(71, 85, 105, 0.3);
+        background: linear-gradient(135deg, rgba(45, 55, 72, 0.9) 0%, rgba(26, 32, 44, 0.8) 100%);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(113, 128, 150, 0.4);
     }
     
     .stTabs [data-baseweb="tab"] {
@@ -178,10 +178,10 @@ st.markdown("""
     
     /* Dark mode tabs */
     [data-theme="dark"] .stTabs [data-baseweb="tab"] {
-        background: linear-gradient(135deg, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
-        color: #cbd5e1;
-        border: 1px solid rgba(71, 85, 105, 0.4);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        background: linear-gradient(135deg, rgba(71, 85, 105, 0.8) 0%, rgba(51, 65, 85, 0.7) 100%);
+        color: #e2e8f0;
+        border: 1px solid rgba(113, 128, 150, 0.5);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
     
     .stTabs [data-baseweb="tab"]:before {
@@ -210,10 +210,10 @@ st.markdown("""
     
     /* Dark mode hover */
     [data-theme="dark"] .stTabs [data-baseweb="tab"]:hover {
-        background: linear-gradient(135deg, rgba(71, 85, 105, 0.7) 0%, rgba(51, 65, 85, 0.5) 100%);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        border-color: rgba(100, 116, 139, 0.6);
-        color: #f1f5f9;
+        background: linear-gradient(135deg, rgba(100, 116, 139, 0.9) 0%, rgba(71, 85, 105, 0.8) 100%);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-color: rgba(148, 163, 184, 0.7);
+        color: #f8fafc;
     }
     
     .stTabs [data-baseweb="tab"]:hover:before {
@@ -239,10 +239,10 @@ st.markdown("""
     
     /* Dark mode active */
     [data-theme="dark"] .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
         color: white !important;
-        box-shadow: 0 10px 30px rgba(30, 64, 175, 0.5), 0 4px 15px rgba(30, 58, 138, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        border-color: #1e40af;
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.6), 0 4px 15px rgba(37, 99, 235, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border-color: #3b82f6;
     }
     
     .stTabs [aria-selected="true"]:hover {
@@ -257,7 +257,7 @@ st.markdown("""
     
     /* Dark mode active hover */
     [data-theme="dark"] .stTabs [aria-selected="true"]:hover {
-        box-shadow: 0 15px 40px rgba(30, 64, 175, 0.6), 0 6px 20px rgba(30, 58, 138, 0.5);
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.7), 0 6px 20px rgba(37, 99, 235, 0.6);
     }
     
     /* Ensure tabs container takes full width */
