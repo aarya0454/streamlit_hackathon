@@ -124,16 +124,26 @@ st.markdown("""
         border-color: var(--primary-color);
     }
     
-    /* Enhanced tabs with smooth transitions and better spacing */
+    /* Enhanced tabs with smooth transitions and better spacing - Light/Dark Mode Support */
     .stTabs [data-baseweb="tab-list"] {
         gap: 12px;
-        background: linear-gradient(135deg, rgba(128, 128, 128, 0.08) 0%, rgba(128, 128, 128, 0.03) 100%);
         padding: 8px 12px;
         border-radius: 15px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(128, 128, 128, 0.1);
         margin-bottom: 20px;
+        /* Light mode styling */
+        background: linear-gradient(135deg, rgba(240, 242, 247, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(200, 200, 200, 0.3);
+    }
+    
+    /* Dark mode styling for tab list */
+    @media (prefers-color-scheme: dark) {
+        .stTabs [data-baseweb="tab-list"] {
+            background: linear-gradient(135deg, rgba(128, 128, 128, 0.08) 0%, rgba(128, 128, 128, 0.03) 100%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+        }
     }
     
     .stTabs [data-baseweb="tab"] {
@@ -149,9 +159,23 @@ st.markdown("""
         text-align: center !important;
         font-size: 14px !important;
         letter-spacing: 0.5px;
-        border: 1px solid transparent;
         position: relative;
         overflow: hidden;
+        /* Light mode styling */
+        background: rgba(255, 255, 255, 0.7);
+        color: #374151;
+        border: 1px solid rgba(200, 200, 200, 0.2);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Dark mode styling for tabs */
+    @media (prefers-color-scheme: dark) {
+        .stTabs [data-baseweb="tab"] {
+            background: rgba(55, 65, 81, 0.3);
+            color: #e5e7eb;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
     }
     
     .stTabs [data-baseweb="tab"]:before {
@@ -161,15 +185,27 @@ st.markdown("""
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
         transition: left 0.5s;
     }
     
     .stTabs [data-baseweb="tab"]:hover {
-        background: linear-gradient(135deg, rgba(128, 128, 128, 0.15) 0%, rgba(128, 128, 128, 0.08) 100%);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-color: rgba(128, 128, 128, 0.2);
+        /* Light mode hover */
+        background: linear-gradient(135deg, rgba(249, 250, 251, 0.9) 0%, rgba(243, 244, 246, 0.8) 100%);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        border-color: rgba(156, 163, 175, 0.4);
+        color: #1f2937;
+    }
+    
+    /* Dark mode hover */
+    @media (prefers-color-scheme: dark) {
+        .stTabs [data-baseweb="tab"]:hover {
+            background: linear-gradient(135deg, rgba(75, 85, 99, 0.4) 0%, rgba(55, 65, 81, 0.3) 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-color: rgba(156, 163, 175, 0.3);
+            color: #f3f4f6;
+        }
     }
     
     .stTabs [data-baseweb="tab"]:hover:before {
@@ -177,18 +213,36 @@ st.markdown("""
     }
     
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, white) 100%) !important;
-        color: white !important;
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
-        border-color: var(--primary-color);
         animation: slideIn 0.3s ease;
         font-weight: 600 !important;
+        /* Light mode active */
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+        color: white !important;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        border-color: #3b82f6;
+    }
+    
+    /* Dark mode active */
+    @media (prefers-color-scheme: dark) {
+        .stTabs [aria-selected="true"] {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+            border-color: #2563eb;
+        }
     }
     
     .stTabs [aria-selected="true"]:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+        /* Light mode active hover */
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+    }
+    
+    /* Dark mode active hover */
+    @media (prefers-color-scheme: dark) {
+        .stTabs [aria-selected="true"]:hover {
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+        }
     }
     
     /* Ensure tabs container takes full width */
@@ -212,6 +266,15 @@ st.markdown("""
             gap: 8px;
             padding: 6px 8px;
         }
+    }
+    
+    /* Force override Streamlit's default tab styling */
+    .stTabs [data-baseweb="tab"] > div {
+        color: inherit !important;
+    }
+    
+    .stTabs [aria-selected="true"] > div {
+        color: white !important;
     }
     
     @keyframes slideIn {
