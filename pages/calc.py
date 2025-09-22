@@ -124,111 +124,129 @@ st.markdown("""
         border-color: var(--primary-color);
     }
     
-    /* Enhanced tabs using Streamlit's native theme variables */
+    /* Beautiful Enhanced Tabs with Perfect Active States */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 15px;
-        padding: 10px 15px;
-        border-radius: 20px;
-        backdrop-filter: blur(15px);
-        margin-bottom: 25px;
-        transition: all 0.3s ease;
-        /* Use Streamlit's secondary background with enhanced styling */
+        gap: 18px;
+        padding: 12px 18px;
+        border-radius: 25px;
+        backdrop-filter: blur(20px);
+        margin-bottom: 30px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         background: linear-gradient(135deg, 
-            color-mix(in srgb, var(--secondary-background-color) 95%, var(--background-color) 5%) 0%, 
-            color-mix(in srgb, var(--secondary-background-color) 85%, var(--background-color) 15%) 100%);
-        box-shadow: 0 4px 20px color-mix(in srgb, var(--text-color) 8%, transparent 92%), 
-                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 50%, transparent 50%);
-        border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent 85%);
+            var(--secondary-background-color) 0%, 
+            color-mix(in srgb, var(--secondary-background-color) 80%, var(--background-color) 20%) 100%);
+        box-shadow: 0 8px 32px color-mix(in srgb, var(--text-color) 10%, transparent 90%), 
+                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 60%, transparent 40%);
+        border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent 80%);
     }
     
+    /* Individual Tab Base Styling */
     .stTabs [data-baseweb="tab"] {
-        border-radius: 15px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        font-weight: 500;
-        padding: 14px 24px !important;
-        min-height: 52px !important;
+        border-radius: 18px !important;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-weight: 600 !important;
+        padding: 16px 28px !important;
+        min-height: 56px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         flex: 1 !important;
         text-align: center !important;
         font-size: 14px !important;
-        letter-spacing: 0.6px;
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-    }
-    
-    /* Individual tabs using Streamlit theme variables */
-    .stTabs [data-baseweb="tab"] {
-        /* Use Streamlit's background color with enhanced styling */
+        letter-spacing: 0.8px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(12px) !important;
+        cursor: pointer !important;
+        
+        /* Beautiful gradient background */
         background: linear-gradient(135deg, 
-            color-mix(in srgb, var(--background-color) 90%, var(--secondary-background-color) 10%) 0%, 
-            color-mix(in srgb, var(--background-color) 75%, var(--secondary-background-color) 25%) 100%);
-        color: var(--text-color);
-        border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent 80%);
-        box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color) 6%, transparent 94%), 
-                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 70%, transparent 30%);
+            var(--background-color) 0%, 
+            color-mix(in srgb, var(--background-color) 85%, var(--secondary-background-color) 15%) 100%) !important;
+        color: var(--text-color) !important;
+        border: 2px solid color-mix(in srgb, var(--text-color) 25%, transparent 75%) !important;
+        box-shadow: 0 4px 16px color-mix(in srgb, var(--text-color) 8%, transparent 92%), 
+                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 80%, transparent 20%) !important;
     }
     
+    /* Shimmer Effect */
     .stTabs [data-baseweb="tab"]:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        transition: left 0.6s ease;
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--background-color) 70%, transparent 30%), transparent) !important;
+        transition: left 0.8s ease !important;
     }
     
+    /* Hover State - Beautiful Enhancement */
     .stTabs [data-baseweb="tab"]:hover {
-        transform: translateY(-3px) scale(1.02);
-    }
-    
-    /* Hover states using Streamlit theme variables */
-    .stTabs [data-baseweb="tab"]:hover {
+        transform: translateY(-4px) scale(1.03) !important;
         background: linear-gradient(135deg, 
-            color-mix(in srgb, var(--background-color) 95%, var(--secondary-background-color) 5%) 0%, 
-            color-mix(in srgb, var(--background-color) 80%, var(--secondary-background-color) 20%) 100%);
-        box-shadow: 0 8px 25px color-mix(in srgb, var(--text-color) 12%, transparent 88%), 
-                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 80%, transparent 20%);
-        border-color: color-mix(in srgb, var(--text-color) 30%, transparent 70%);
-        color: var(--text-color);
+            color-mix(in srgb, var(--background-color) 95%, var(--primary-color) 5%) 0%, 
+            color-mix(in srgb, var(--background-color) 85%, var(--secondary-background-color) 15%) 100%) !important;
+        box-shadow: 0 12px 32px color-mix(in srgb, var(--text-color) 15%, transparent 85%), 
+                    inset 0 2px 0 color-mix(in srgb, var(--background-color) 90%, transparent 10%) !important;
+        border-color: color-mix(in srgb, var(--text-color) 40%, transparent 60%) !important;
+        color: var(--text-color) !important;
     }
     
     .stTabs [data-baseweb="tab"]:hover:before {
-        left: 100%;
+        left: 100% !important;
     }
     
-    .stTabs [aria-selected="true"] {
-        transform: translateY(-2px) scale(1.05);
-        animation: slideIn 0.4s ease;
+    /* ACTIVE STATE - The Star of the Show! */
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        transform: translateY(-3px) scale(1.08) !important;
+        animation: activeTabPulse 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
         font-weight: 700 !important;
-        z-index: 10;
-        position: relative;
-    }
-    
-    /* Active tab using Streamlit's primary color */
-    .stTabs [aria-selected="true"] {
+        z-index: 15 !important;
+        position: relative !important;
+        
+        /* Stunning blue gradient */
         background: linear-gradient(135deg, 
             var(--primary-color) 0%, 
-            color-mix(in srgb, var(--primary-color) 85%, black 15%) 100%) !important;
+            color-mix(in srgb, var(--primary-color) 75%, #1e40af 25%) 50%,
+            color-mix(in srgb, var(--primary-color) 85%, #1e3a8a 15%) 100%) !important;
         color: white !important;
-        box-shadow: 0 10px 30px color-mix(in srgb, var(--primary-color) 40%, transparent 60%), 
-                    0 4px 15px color-mix(in srgb, var(--primary-color) 30%, transparent 70%), 
-                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        border-color: var(--primary-color);
+        border: 2px solid var(--primary-color) !important;
+        
+        /* Magnificent shadow effects */
+        box-shadow: 0 16px 48px color-mix(in srgb, var(--primary-color) 50%, transparent 50%), 
+                    0 8px 24px color-mix(in srgb, var(--primary-color) 35%, transparent 65%), 
+                    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+                    inset 0 -1px 0 color-mix(in srgb, var(--primary-color) 70%, black 30%) !important;
     }
     
-    .stTabs [aria-selected="true"]:hover {
-        transform: translateY(-4px) scale(1.06);
+    /* Active Tab Hover - Even More Beautiful */
+    .stTabs [data-baseweb="tab"][aria-selected="true"]:hover {
+        transform: translateY(-5px) scale(1.1) !important;
+        box-shadow: 0 20px 60px color-mix(in srgb, var(--primary-color) 60%, transparent 40%), 
+                    0 12px 32px color-mix(in srgb, var(--primary-color) 45%, transparent 55%),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.4) !important;
     }
     
-    /* Active tab hover using Streamlit's primary color */
-    .stTabs [aria-selected="true"]:hover {
-        box-shadow: 0 15px 40px color-mix(in srgb, var(--primary-color) 50%, transparent 50%), 
-                    0 6px 20px color-mix(in srgb, var(--primary-color) 40%, transparent 60%);
+    /* Active Tab Text Color Override */
+    .stTabs [data-baseweb="tab"][aria-selected="true"] > div {
+        color: white !important;
+    }
+    
+    /* Keyframe for Active Tab Animation */
+    @keyframes activeTabPulse {
+        0% {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 24px color-mix(in srgb, var(--primary-color) 30%, transparent 70%);
+        }
+        50% {
+            transform: translateY(-4px) scale(1.1);
+            box-shadow: 0 20px 48px color-mix(in srgb, var(--primary-color) 60%, transparent 40%);
+        }
+        100% {
+            transform: translateY(-3px) scale(1.08);
+            box-shadow: 0 16px 48px color-mix(in srgb, var(--primary-color) 50%, transparent 50%);
+        }
     }
     
     /* Ensure tabs container takes full width */
@@ -254,13 +272,34 @@ st.markdown("""
         }
     }
     
-    /* Force override Streamlit's default tab styling */
-    .stTabs [data-baseweb="tab"] > div {
+    /* Force override Streamlit's default tab styling with maximum specificity */
+    .stTabs [data-baseweb="tab"] > div,
+    .stTabs [data-baseweb="tab"] > div > div,
+    .stTabs [data-baseweb="tab"] span {
         color: inherit !important;
+        font-weight: inherit !important;
     }
     
-    .stTabs [aria-selected="true"] > div {
+    /* Ensure active tab text is always white */
+    .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
+    .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
+    .stTabs [data-baseweb="tab"][aria-selected="true"] span,
+    .stTabs [aria-selected="true"] > div,
+    .stTabs [aria-selected="true"] > div > div,
+    .stTabs [aria-selected="true"] span {
         color: white !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Additional specificity for active state */
+    .stTabs [data-baseweb="tab"][aria-selected="true"],
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, 
+            var(--primary-color) 0%, 
+            color-mix(in srgb, var(--primary-color) 75%, #1e40af 25%) 50%,
+            color-mix(in srgb, var(--primary-color) 85%, #1e3a8a 15%) 100%) !important;
+        color: white !important;
+        border: 2px solid var(--primary-color) !important;
     }
     
     @keyframes slideIn {
