@@ -186,14 +186,26 @@ st.markdown("""
         transform: translateY(-3px) scale(1.02);
     }
     
-    /* Hover states using Streamlit theme variables */
-    .stTabs [data-baseweb="tab"]:hover {
+    /* Light Mode Hover - More Visible Animations */
+    [data-theme="light"] .stTabs [data-baseweb="tab"]:hover,
+    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"]:hover {
         background: linear-gradient(135deg, 
-            color-mix(in srgb, var(--background-color) 95%, var(--secondary-background-color) 5%) 0%, 
+            color-mix(in srgb, var(--background-color) 90%, var(--primary-color) 10%) 0%, 
             color-mix(in srgb, var(--background-color) 80%, var(--secondary-background-color) 20%) 100%);
-        box-shadow: 0 8px 25px color-mix(in srgb, var(--text-color) 12%, transparent 88%), 
+        box-shadow: 0 6px 20px color-mix(in srgb, var(--text-color) 18%, transparent 82%), 
+                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 85%, transparent 15%);
+        border-color: color-mix(in srgb, var(--primary-color) 40%, transparent 60%);
+        color: var(--text-color);
+    }
+    
+    /* Dark Mode Hover - Enhanced Contrast */
+    [data-theme="dark"] .stTabs [data-baseweb="tab"]:hover {
+        background: linear-gradient(135deg, 
+            color-mix(in srgb, var(--background-color) 85%, var(--primary-color) 15%) 0%, 
+            color-mix(in srgb, var(--background-color) 70%, var(--secondary-background-color) 30%) 100%);
+        box-shadow: 0 8px 25px color-mix(in srgb, var(--text-color) 15%, transparent 85%), 
                     inset 0 1px 0 color-mix(in srgb, var(--background-color) 80%, transparent 20%);
-        border-color: color-mix(in srgb, var(--text-color) 30%, transparent 70%);
+        border-color: color-mix(in srgb, var(--primary-color) 50%, transparent 50%);
         color: var(--text-color);
     }
     
@@ -209,26 +221,47 @@ st.markdown("""
         position: relative;
     }
     
-    /* Active tab using Streamlit's primary color */
-    .stTabs [aria-selected="true"] {
+    /* Light Mode Active Tab - Blue Background with White Text */
+    [data-theme="light"] .stTabs [aria-selected="true"],
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, 
             var(--primary-color) 0%, 
-            color-mix(in srgb, var(--primary-color) 85%, black 15%) 100%) !important;
+            color-mix(in srgb, var(--primary-color) 80%, #1e40af 20%) 100%) !important;
         color: white !important;
-        box-shadow: 0 10px 30px color-mix(in srgb, var(--primary-color) 40%, transparent 60%), 
-                    0 4px 15px color-mix(in srgb, var(--primary-color) 30%, transparent 70%), 
-                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        border-color: var(--primary-color);
+        box-shadow: 0 8px 25px color-mix(in srgb, var(--primary-color) 35%, transparent 65%), 
+                    0 4px 12px color-mix(in srgb, var(--primary-color) 25%, transparent 75%), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        border: 2px solid var(--primary-color) !important;
     }
     
+    /* Dark Mode Active Tab - Enhanced Contrast */
+    [data-theme="dark"] .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, 
+            var(--primary-color) 0%, 
+            color-mix(in srgb, var(--primary-color) 75%, #60a5fa 25%) 100%) !important;
+        color: white !important;
+        box-shadow: 0 12px 35px color-mix(in srgb, var(--primary-color) 45%, transparent 55%), 
+                    0 6px 18px color-mix(in srgb, var(--primary-color) 35%, transparent 65%), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 2px solid var(--primary-color) !important;
+    }
+    
+    /* Active Tab Hover States */
     .stTabs [aria-selected="true"]:hover {
         transform: translateY(-4px) scale(1.06);
     }
     
-    /* Active tab hover using Streamlit's primary color */
-    .stTabs [aria-selected="true"]:hover {
-        box-shadow: 0 15px 40px color-mix(in srgb, var(--primary-color) 50%, transparent 50%), 
-                    0 6px 20px color-mix(in srgb, var(--primary-color) 40%, transparent 60%);
+    /* Light Mode Active Hover */
+    [data-theme="light"] .stTabs [aria-selected="true"]:hover,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"]:hover {
+        box-shadow: 0 12px 35px color-mix(in srgb, var(--primary-color) 45%, transparent 55%), 
+                    0 6px 18px color-mix(in srgb, var(--primary-color) 35%, transparent 65%);
+    }
+    
+    /* Dark Mode Active Hover */
+    [data-theme="dark"] .stTabs [aria-selected="true"]:hover {
+        box-shadow: 0 16px 45px color-mix(in srgb, var(--primary-color) 55%, transparent 45%), 
+                    0 8px 22px color-mix(in srgb, var(--primary-color) 45%, transparent 55%);
     }
     
     /* Ensure tabs container takes full width */
@@ -257,9 +290,26 @@ st.markdown("""
     /* Force override Streamlit's default tab styling */
     .stTabs [data-baseweb="tab"] > div {
         color: inherit !important;
+        font-weight: inherit !important;
     }
     
-    .stTabs [aria-selected="true"] > div {
+    /* Light Mode Active Tab Text - White on Blue */
+    [data-theme="light"] .stTabs [aria-selected="true"] > div,
+    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] > div {
+        color: white !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Dark Mode Active Tab Text - White on Cyan */
+    [data-theme="dark"] .stTabs [aria-selected="true"] > div {
+        color: white !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Ensure all nested elements inherit the white color for active tabs */
+    .stTabs [aria-selected="true"] > div,
+    .stTabs [aria-selected="true"] > div > div,
+    .stTabs [aria-selected="true"] span {
         color: white !important;
     }
     
