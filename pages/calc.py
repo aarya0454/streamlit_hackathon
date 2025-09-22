@@ -24,7 +24,314 @@ st.set_page_config(
 )
 
 # Enhanced CSS for calc.py with modern, cool interactive elements
-
+st.markdown("""
+<style>
+    /* Import Google Font for better typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    /* Global typography enhancement */
+    .stApp {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    /* Enhanced button styling with smooth transitions */
+    .stButton > button {
+            color: red;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stButton > button:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .stButton > button:hover:before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0);
+        transition: transform 0.1s;
+    }
+    
+    /* Primary button special styling */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, var(--primary-color) 0%, color-mix(in srgb, var(--primary-color) 85%, black) 100%);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Enhanced input fields with animated focus states */
+    .stTextInput > div > div > input,
+    .stNumberInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        border: 1.5px solid rgba(128, 128, 128, 0.2);
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stNumberInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+        transform: translateY(-1px);
+    }
+    
+    /* Enhanced selectbox with smooth transitions */
+    .stSelectbox > div > div {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .stSelectbox > div > div:hover {
+        border-color: var(--primary-color);
+    }
+    
+    /* Metric cards with subtle animations */
+    [data-testid="metric-container"] {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        border: 1px solid rgba(128, 128, 128, 0.1);
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    [data-testid="metric-container"]:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-color);
+    }
+    
+    /* Enhanced tabs with smooth transitions */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: rgba(128, 128, 128, 0.05);
+        padding: 4px;
+        border-radius: 10px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(128, 128, 128, 0.1);
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: var(--primary-color) !important;
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Enhanced expander with smooth animations */
+    .streamlit-expanderHeader {
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: rgba(128, 128, 128, 0.1);
+    }
+    
+    /* Info, warning, error boxes with subtle animations */
+    .stAlert {
+        border-radius: 10px;
+        border-left: 4px solid;
+        animation: fadeIn 0.5s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Enhanced slider with smooth thumb transitions */
+    .stSlider > div > div > div > div {
+        transition: all 0.3s ease;
+    }
+    
+    .stSlider > div > div > div[role="slider"] {
+        transition: all 0.2s ease;
+    }
+    
+    .stSlider > div > div > div[role="slider"]:hover {
+        transform: scale(1.2);
+    }
+    
+    /* Sidebar enhancements */
+    section[data-testid="stSidebar"] {
+        backdrop-filter: blur(10px);
+    }
+    
+    section[data-testid="stSidebar"] .element-container {
+        animation: slideInLeft 0.5s ease;
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Progress bar enhancement */
+    .stProgress > div > div {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 70%, white));
+        animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    /* Enhanced DataFrame styling */
+    .dataframe {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Custom recommendation box styling */
+    .recommendation-box {
+        background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+        border: 2px solid rgba(76, 175, 80, 0.3);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 1rem 0;
+        animation: glow 3s ease-in-out infinite;
+        text-align: center;
+    }
+    
+    @keyframes glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(76, 175, 80, 0.2); }
+        50% { box-shadow: 0 0 30px rgba(76, 175, 80, 0.4); }
+    }
+    
+    /* Custom reason box styling */
+    .reason-box {
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%);
+        border-left: 4px solid rgba(33, 150, 243, 0.8);
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-radius: 0 10px 10px 0;
+        animation: slideInRight 0.6s ease;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Design card styling */
+    .design-card {
+        background: rgba(128, 128, 128, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        transition: all 0.3s ease;
+    }
+    
+    .design-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Cost card styling */
+    .cost-card {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+    
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Loading spinner enhancement */
+    .stSpinner > div {
+        border-color: var(--primary-color) transparent transparent transparent;
+    }
+    
+    /* Enhanced file uploader */
+    .uploadedFile {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .uploadedFile:hover {
+        background: rgba(128, 128, 128, 0.1);
+    }
+</style>
+""", unsafe_allow_html=True)
 if 'groundwater_gdf' not in st.session_state:
     st.session_state['groundwater_gdf'] = None
 if 'data_source' not in st.session_state:
