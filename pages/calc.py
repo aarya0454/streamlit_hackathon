@@ -186,27 +186,15 @@ st.markdown("""
         transform: translateY(-3px) scale(1.02);
     }
     
-    /* Light Mode Hover - More Visible Animations */
-    [data-theme="light"] .stTabs [data-baseweb="tab"]:hover,
-    .stApp:not([data-theme="dark"]) .stTabs [data-baseweb="tab"]:hover {
+    /* Enhanced Hover States - More Visible */
+    .stTabs [data-baseweb="tab"]:hover {
         background: linear-gradient(135deg, 
-            color-mix(in srgb, var(--background-color) 90%, var(--primary-color) 10%) 0%, 
-            color-mix(in srgb, var(--background-color) 80%, var(--secondary-background-color) 20%) 100%);
-        box-shadow: 0 6px 20px color-mix(in srgb, var(--text-color) 18%, transparent 82%), 
-                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 85%, transparent 15%);
-        border-color: color-mix(in srgb, var(--primary-color) 40%, transparent 60%);
-        color: var(--text-color);
-    }
-    
-    /* Dark Mode Hover - Enhanced Contrast */
-    [data-theme="dark"] .stTabs [data-baseweb="tab"]:hover {
-        background: linear-gradient(135deg, 
-            color-mix(in srgb, var(--background-color) 85%, var(--primary-color) 15%) 0%, 
-            color-mix(in srgb, var(--background-color) 70%, var(--secondary-background-color) 30%) 100%);
-        box-shadow: 0 8px 25px color-mix(in srgb, var(--text-color) 15%, transparent 85%), 
-                    inset 0 1px 0 color-mix(in srgb, var(--background-color) 80%, transparent 20%);
-        border-color: color-mix(in srgb, var(--primary-color) 50%, transparent 50%);
-        color: var(--text-color);
+            rgba(59, 130, 246, 0.1) 0%, 
+            rgba(37, 99, 235, 0.05) 100%) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(59, 130, 246, 0.4) !important;
+        color: var(--text-color) !important;
     }
     
     .stTabs [data-baseweb="tab"]:hover:before {
@@ -221,47 +209,23 @@ st.markdown("""
         position: relative;
     }
     
-    /* Light Mode Active Tab - Blue Background with White Text */
-    [data-theme="light"] .stTabs [aria-selected="true"],
-    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] {
+    /* Active Tab - Beautiful Blue with White Text */
+    .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, 
             var(--primary-color) 0%, 
-            color-mix(in srgb, var(--primary-color) 80%, #1e40af 20%) 100%) !important;
+            #1e40af 100%) !important;
         color: white !important;
-        box-shadow: 0 8px 25px color-mix(in srgb, var(--primary-color) 35%, transparent 65%), 
-                    0 4px 12px color-mix(in srgb, var(--primary-color) 25%, transparent 75%), 
-                    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4), 
+                    0 4px 12px rgba(37, 99, 235, 0.3), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
         border: 2px solid var(--primary-color) !important;
     }
     
-    /* Dark Mode Active Tab - Enhanced Contrast */
-    [data-theme="dark"] .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, 
-            var(--primary-color) 0%, 
-            color-mix(in srgb, var(--primary-color) 75%, #60a5fa 25%) 100%) !important;
-        color: white !important;
-        box-shadow: 0 12px 35px color-mix(in srgb, var(--primary-color) 45%, transparent 55%), 
-                    0 6px 18px color-mix(in srgb, var(--primary-color) 35%, transparent 65%), 
-                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        border: 2px solid var(--primary-color) !important;
-    }
-    
-    /* Active Tab Hover States */
+    /* Active Tab Hover */
     .stTabs [aria-selected="true"]:hover {
-        transform: translateY(-4px) scale(1.06);
-    }
-    
-    /* Light Mode Active Hover */
-    [data-theme="light"] .stTabs [aria-selected="true"]:hover,
-    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"]:hover {
-        box-shadow: 0 12px 35px color-mix(in srgb, var(--primary-color) 45%, transparent 55%), 
-                    0 6px 18px color-mix(in srgb, var(--primary-color) 35%, transparent 65%);
-    }
-    
-    /* Dark Mode Active Hover */
-    [data-theme="dark"] .stTabs [aria-selected="true"]:hover {
-        box-shadow: 0 16px 45px color-mix(in srgb, var(--primary-color) 55%, transparent 45%), 
-                    0 8px 22px color-mix(in srgb, var(--primary-color) 45%, transparent 55%);
+        transform: translateY(-4px) scale(1.06) !important;
+        box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5), 
+                    0 6px 18px rgba(37, 99, 235, 0.4) !important;
     }
     
     /* Ensure tabs container takes full width */
@@ -287,30 +251,26 @@ st.markdown("""
         }
     }
     
-    /* Force override Streamlit's default tab styling */
-    .stTabs [data-baseweb="tab"] > div {
+    /* Force override Streamlit's default tab styling with maximum specificity */
+    .stTabs [data-baseweb="tab"] > div,
+    .stTabs [data-baseweb="tab"] > div > div,
+    .stTabs [data-baseweb="tab"] span,
+    .stTabs [data-baseweb="tab"] p {
         color: inherit !important;
         font-weight: inherit !important;
     }
     
-    /* Light Mode Active Tab Text - White on Blue */
-    [data-theme="light"] .stTabs [aria-selected="true"] > div,
-    .stApp:not([data-theme="dark"]) .stTabs [aria-selected="true"] > div {
-        color: white !important;
-        font-weight: 700 !important;
-    }
-    
-    /* Dark Mode Active Tab Text - White on Cyan */
-    [data-theme="dark"] .stTabs [aria-selected="true"] > div {
-        color: white !important;
-        font-weight: 700 !important;
-    }
-    
-    /* Ensure all nested elements inherit the white color for active tabs */
+    /* ACTIVE TAB TEXT - WHITE COLOR WITH MAXIMUM SPECIFICITY */
+    .stTabs [data-baseweb="tab"][aria-selected="true"] > div,
+    .stTabs [data-baseweb="tab"][aria-selected="true"] > div > div,
+    .stTabs [data-baseweb="tab"][aria-selected="true"] span,
+    .stTabs [data-baseweb="tab"][aria-selected="true"] p,
     .stTabs [aria-selected="true"] > div,
     .stTabs [aria-selected="true"] > div > div,
-    .stTabs [aria-selected="true"] span {
+    .stTabs [aria-selected="true"] span,
+    .stTabs [aria-selected="true"] p {
         color: white !important;
+        font-weight: 700 !important;
     }
     
     @keyframes slideIn {
