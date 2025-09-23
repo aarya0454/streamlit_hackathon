@@ -1,741 +1,895 @@
 """
-Hydro-Assess Landing Page
-A minimal, professional introductory page for the Hydro-Assess water management tool.
+Hydro-Assess - Smart India Hackathon 2025
+A water management assessment tool for rainwater harvesting
+Built by Team Aether Spark for SIH 2025
 """
 
 import streamlit as st
+import datetime
 
 # Page configuration - must be the first Streamlit command
 st.set_page_config(
-    page_title="Hydro-Asses - Smart Water Potential Assessment",
+    page_title="Hydro-Assess | Smart India Hackathon 2025",
     page_icon="💧",
-    layout="wide",  # Wide layout for full background effect
-    initial_sidebar_state="collapsed"  # Hide sidebar for cleaner look
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for modern, clean design
+# Professional CSS with static gradient and clean typography
 st.markdown("""
     <style>
-    /* Hide Streamlit default elements for cleaner look */
+    /* Import Google Font - Inter for professional typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    
+    /* Hide Streamlit default elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    .viewerBadge_container__1QSob {display: none;}
     
-    /* Remove default padding and margins */
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-        max-width: 1200px;
+    /* Global typography and layout */
+    html, body, .stApp {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
     
-    /* Set beautiful subtle violet to blue animated background */
+    /* Main container settings */
+    .main .block-container {
+        padding-top: 0;
+        padding-bottom: 2rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        max-width: 1280px;
+        margin: 0 auto;
+    }
+    
+    /* Professional static gradient background */
     .stApp {
-        background: linear-gradient(-45deg, #667eea, #764ba2, #4c63d2, #1e3a8a, #3b82f6, #1e40af);
-        background-size: 400% 400%;
-        animation: subtleGradientShift 20s ease-in-out infinite;
+        background: linear-gradient(135deg, #004d40 0%, #011f4b 100%);
         background-attachment: fixed;
         min-height: 100vh;
-    }
-    
-    @keyframes subtleGradientShift {
-        0% { 
-            background: linear-gradient(-45deg, #667eea, #764ba2, #4c63d2, #1e3a8a, #3b82f6, #1e40af);
-            background-position: 0% 50%;
-        }
-        25% { 
-            background: linear-gradient(-45deg, #764ba2, #4c63d2, #1e3a8a, #3b82f6, #1e40af, #667eea);
-            background-position: 50% 0%;
-        }
-        50% { 
-            background: linear-gradient(-45deg, #4c63d2, #1e3a8a, #3b82f6, #1e40af, #667eea, #764ba2);
-            background-position: 100% 50%;
-        }
-        75% { 
-            background: linear-gradient(-45deg, #1e3a8a, #3b82f6, #1e40af, #667eea, #764ba2, #4c63d2);
-            background-position: 50% 100%;
-        }
-        100% { 
-            background: linear-gradient(-45deg, #3b82f6, #1e40af, #667eea, #764ba2, #4c63d2, #1e3a8a);
-            background-position: 0% 50%;
-        }
-    }
-    
-    /* Remove white bar - transparent main container */
-    .main-container {
-        background: transparent;
-        backdrop-filter: none;
-        border-radius: 0;
-        padding: 0;
-        margin: 0;
-        max-width: 100%;
-        box-shadow: none;
-    }
-    
-    /* Hero section - clean and minimal */
-    .hero-section {
-        text-align: center;
-        padding: 5rem 1.5rem 3.5rem 1.5rem; /* More vertical padding */
-        margin-bottom: 2rem;
-        background: transparent;
-        backdrop-filter: none;
-        border-radius: 0;
-        border: none;
-        box-shadow: none;
-    }
-    
-    /* Main title styling - Enhanced hierarchy */
-    h1 {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-weight: 1000;
-        color: #ffffff !important;
-        letter-spacing: -3px;
-        text-align: center;
-        font-size: 6rem;           /* Increased from 4.5rem */
-        margin-bottom: 1.5rem;     /* Slightly more space below */
-        text-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 2px 8px #1e3a8a;
-        background: none !important;
-        -webkit-background-clip: unset !important;
-        -webkit-text-fill-color: unset !important;
-        background-clip: unset !important;
-        animation: titleGlow 2s ease-in-out infinite alternate;
-        line-height: 1.08;
-    }
-    
-    @keyframes titleGlow {
-        0% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 40px rgba(30, 64, 175, 0.2)); }
-        100% { filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 60px rgba(30, 64, 175, 0.3)); }
-    }
-    
-    /* Tagline styling - Enhanced hierarchy */
-    .tagline {
-        font-size: 2.2rem;         /* Increased from 1.6rem */
-        color: #ffffff;
-        font-weight: 500;
-        line-height: 1.4;
-        margin-bottom: 2.5rem;
-        text-align: center;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        opacity: 0.97;
-        letter-spacing: 0.5px;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 0.95;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Section headers - Enhanced hierarchy */
-    h2 {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-weight: 800;
-        color: #ffffff;
-        margin-top: 2.5rem;
-        margin-bottom: 1.5rem;
-        font-size: 2.4rem;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        letter-spacing: -0.8px;
-        animation: slideInLeft 0.8s ease-out;
-        line-height: 1.2;
-        text-align: center;
-    }
-    
-    @keyframes slideInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-50px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    /* Content sections - clean and minimal */
-    .content-section {
-        background: transparent;
-        backdrop-filter: none;
-        padding: 1.5rem 0;
-        border-radius: 0;
-        margin: 2rem 0;
-        border: none;
-        box-shadow: none;
-    }
-    
-    /* Paragraph text styling - Enhanced for better visibility */
-    .stMarkdown p {
-        font-size: 1.2rem;
-        line-height: 1.8;
-        color: #ffffff !important;
-        font-weight: 300;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        margin-bottom: 1.5rem;
-        letter-spacing: 0.3px;
-    }
-    
-    /* Ensure all text is white */
-    .stMarkdown, .stMarkdown * {
-        color: #ffffff !important;
-    }
-    
-    /* Fix any black text issues */
-    p, span, div, h1, h2, h3, h4, h5, h6 {
-        color: #ffffff !important;
-    }
-    
-    /* CTA section styling - clean and minimal */
-    .cta-section {
-        margin: 2.5rem 0;
-        text-align: center;
-        background: transparent;
-        backdrop-filter: none;
-        padding: 1.5rem 0;
-        border-radius: 0;
-        border: none;
-    }
-    
-    /* Button styling */
-    .stLinkButton {
-        display: flex;
-        justify-content: center;
-        margin-top: 2rem;
-    }
-    
-    .stLinkButton > a {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8, #1e40af) !important;
-        color: white !important;
-        padding: 1.2rem 3.5rem !important;
-        font-size: 1.3rem !important;
-        font-weight: 700 !important;
-        border-radius: 50px !important;
-        text-decoration: none !important;
-        display: inline-block !important;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-        border: 2px solid rgba(255, 255, 255, 0.3) !important;
-        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4) !important;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        font-family: 'Inter', sans-serif;
         position: relative;
-        overflow: hidden;
     }
     
-    .stLinkButton > a::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
-    }
-    
-    .stLinkButton > a:hover::before {
-        left: 100%;
-    }
-    
-    .stLinkButton > a:hover {
-        background: linear-gradient(135deg, #1e40af, #1d4ed8, #3b82f6) !important;
-        box-shadow: 0 15px 40px rgba(30, 64, 175, 0.6) !important;
-        transform: translateY(-5px) scale(1.03) !important;
-        border-color: rgba(255, 255, 255, 0.5) !important;
-    }
-    
-    /* Footer styling - clean and minimal */
-    .custom-footer {
-        text-align: center;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1rem;
-        margin-top: 4rem;
-        padding: 2rem 0;
-        background: transparent;
-        backdrop-filter: none;
-        border-radius: 0;
-        border: none;
-    }
-    
-    /* Enhanced hover effects for interactive elements */
-    .interactive-card {
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer;
-    }
-    
-    .interactive-card:hover {
-        transform: translateY(-10px) scale(1.02);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
-        border-color: rgba(255, 255, 255, 0.4) !important;
-    }
-    
-    /* Enhanced button hover effects */
-    .cta-button {
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-    
-    .cta-button:hover {
-        transform: translateY(-3px) scale(1.05);
-        box-shadow: 0 15px 35px rgba(59, 130, 246, 0.6) !important;
-    }
-    
-    /* Pulse animation for important elements */
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    
-    .pulse-animation {
-        animation: pulse 2s ease-in-out infinite;
-    }
-    
-    /* Enhanced mobile responsiveness */
-    @media (max-width: 768px) {
-        h1 {
-            font-size: 2.5rem;
-            letter-spacing: -1px;
-        }
-        
-        .tagline {
-            font-size: 1.2rem;
-            padding: 0 1rem;
-        }
-        
-        .hero-section {
-            padding: 2rem 1rem;
-        }
-        
-        .content-section {
-            padding: 1.5rem;
-        }
-        
-        /* Mobile-specific grid adjustments */
-        .mobile-grid {
-            grid-template-columns: 1fr !important;
-            gap: 1rem !important;
-        }
-        
-        /* Mobile button adjustments */
-        .mobile-button {
-            padding: 1rem 2rem !important;
-            font-size: 1.1rem !important;
-        }
-        
-        /* Mobile text adjustments */
-        .mobile-text {
-            font-size: 0.9rem !important;
-            line-height: 1.5 !important;
-        }
-        
-        /* Ensure cards don't overflow on mobile */
-        .stMarkdown div {
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-        }
-        
-        /* Mobile card adjustments */
-        .stMarkdown div[style*="grid-template-columns"] {
-            grid-template-columns: 1fr !important;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        h1 {
-            font-size: 2rem;
-        }
-        
-        .tagline {
-            font-size: 1rem;
-        }
-        
-        .hero-section {
-            padding: 1.5rem 0.5rem;
-        }
-        
-        /* Extra small mobile adjustments */
-        .xs-mobile {
-            padding: 1rem !important;
-            margin: 0.5rem !important;
-        }
-        
-        /* Ensure no horizontal scrolling */
-        body, html {
-            overflow-x: hidden !important;
-        }
-        
-        .stApp {
-            overflow-x: hidden !important;
-        }
-    }
-    
-    /* Smooth scrolling */
-    html {
-        scroll-behavior: smooth;
-    }
-    
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2));
-        border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4));
-    }
-    
-    /* Simplified floating particles effect for better performance */
-    .stApp::before {
+    /* Subtle topographical pattern overlay */
+    .stApp::after {
         content: '';
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: 
-            radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(30, 64, 175, 0.08) 0%, transparent 50%);
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         pointer-events: none;
-        z-index: -1;
-        animation: float 30s ease-in-out infinite;
+        z-index: 0;
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-    
-    /* Enhanced text selection */
-    ::selection {
-        background: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
-    }
-    
-    ::-moz-selection {
-        background: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
-    }
-    
-    /* Custom button styling to match theme */
-    .stButton > button {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8, #1e40af) !important;
-        color: white !important;
-        border: 2px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 50px !important;
-        font-weight: 700 !important;
-        font-size: 1.1rem !important;
-        padding: 0.75rem 2rem !important;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+    /* Typography hierarchy */
+    h1 {
         font-family: 'Inter', sans-serif;
-        position: relative;
-        overflow: hidden;
+        font-weight: 800;
+        color: #ffffff;
+        font-size: 3.5rem;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     
-    .stButton > button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
+    h2 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        color: #ffffff;
+        font-size: 2.25rem;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    h3 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 1.5rem;
+        line-height: 1.3;
+        margin-bottom: 1rem;
+    }
+    
+    p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.125rem;
+        line-height: 1.7;
+        font-weight: 400;
+    }
+    
+    /* Card styling */
+    .feature-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 2.5rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 320px;
+        margin: 1rem 0;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
     
-    .stButton > button:hover::before {
-        left: 100%;
+    .feature-card:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        border-color: rgba(46, 139, 87, 0.3);
+    }
+    
+    .feature-card h3 {
+        margin-bottom: 1.25rem;
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .feature-card p {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 1rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+        flex-grow: 1;
+        text-align: center;
+    }
+    
+    .icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem auto;
+        background: rgba(46, 139, 87, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(46, 139, 87, 0.2);
+    }
+    
+    .icon-wrapper svg {
+        width: 32px;
+        height: 32px;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #2E8B57 0%, #005A9C 100%);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50px;
+        padding: 1rem 2.5rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 24px rgba(46, 139, 87, 0.3);
+        text-transform: none;
+        font-family: 'Inter', sans-serif;
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, #1e40af, #1d4ed8, #3b82f6) !important;
-        box-shadow: 0 12px 35px rgba(30, 64, 175, 0.6) !important;
-        transform: translateY(-3px) scale(1.02) !important;
-        border-color: rgba(255, 255, 255, 0.5) !important;
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(46, 139, 87, 0.4);
+        background: linear-gradient(135deg, #247349 0%, #004d85 100%);
+        border-color: rgba(255, 255, 255, 0.3);
     }
     
-    .stButton > button:active {
-        transform: translateY(-1px) scale(0.98) !important;
+    /* Icon styling */
+    .icon-wrapper {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+    }
+    
+    .icon-wrapper svg {
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Section styling */
+    .section {
+        margin: 4rem 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Header bar - transparent centered design */
+    .header-bar {
+        background: transparent;
+        padding: 3rem 0 2rem 0;
+        margin-bottom: 1rem;
+    }
+
+    .header-content {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        text-align: center;
+    }
+
+    .logo-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .logo-icon {
+        font-size: 4.5rem;
+        filter: drop-shadow(0 6px 12px rgba(46, 139, 87, 0.4));
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+    }
+
+    .logo-text {
+        font-size: 3.25rem;
+        font-weight: 900;
+        color: white;
+        line-height: 1;
+        letter-spacing: -0.025em;
+        text-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        background: linear-gradient(135deg, #ffffff 0%, #e0f2f1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .logo-subtitle {
+        font-size: 1.25rem;
+        color: rgba(255,255,255,0.85);
+        font-weight: 500;
+        margin-top: 0.75rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+    
+    /* Hero section */
+    .hero-section {
+        text-align: center;
+        padding: 2rem 0 3rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    
+    .hero-title {
+        font-size: 3.75rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        color: #ffffff;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 600;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .tagline {
+        font-size: 1.375rem;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 2rem auto;
+        line-height: 1.6;
+        max-width: 900px;
+        text-align: center;
+        padding: 0 1rem;
+    }
+    
+    /* Step cards */
+    .step-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        height: 100%;
+        transition: all 0.3s ease;
+        margin: 1rem 0;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 280px;
+    }
+    
+    .step-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2E8B57 0%, #005A9C 100%);
+        color: white;
+        font-weight: 700;
+        margin: 0 auto 1.5rem auto;
+        font-size: 1.125rem;
+    }
+    
+    .step-card h4 {
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .step-card p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        text-align: center;
+        flex-grow: 1;
+    }
+    
+    /* Quote styling */
+    .testimonial {
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 4px solid #2E8B57;
+        padding: 1.5rem;
+        border-radius: 8px;
+        font-style: italic;
+        margin: 2rem 0;
+    }
+    
+    .testimonial-author {
+        font-style: normal;
+        font-weight: 600;
+        color: #2E8B57;
+        margin-top: 1rem;
+        display: block;
+    }
+    
+    /* About section */
+    .about-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin: 2rem 0;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-box {
+        text-align: center;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-box:hover {
+        transform: translateY(-4px);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(46, 139, 87, 0.5);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: #2E8B57;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* System works cards hover effects */
+    .system-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .system-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2) !important;
+        border-color: rgba(46, 139, 87, 0.4) !important;
+        background: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    .system-card:hover .icon-bg {
+        background: linear-gradient(135deg, #247349, #004d85) !important;
+        transform: scale(1.1);
+    }
+
+    .system-card:hover h4 {
+        color: #ffffff !important;
+    }
+    
+    /* Footer styling */
+    .footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 4rem;
+        padding-top: 2rem;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 2.5rem;
+        }
+        
+        .hero-title {
+            font-size: 2.75rem;
+        }
+        
+        .tagline {
+            font-size: 1.25rem;
+        }
+        
+        h2 {
+            font-size: 1.875rem;
+        }
+        
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+    
+    /* Accessibility */
+    a:focus,
+    button:focus {
+        outline: 2px solid #2E8B57;
+        outline-offset: 2px;
+    }
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+        .feature-card {
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# Custom CSS for dark mode support
+# Centered Header
 st.markdown("""
-<style>
-    /* Dark mode support for index page */
-    .stApp[data-theme="dark"] h1,
-    .stApp[data-theme="dark"] h2,
-    .stApp[data-theme="dark"] h3,
-    .stApp[data-theme="dark"] h4,
-    .stApp[data-theme="dark"] h5,
-    .stApp[data-theme="dark"] h6 {
-        color: #ffffff !important;
-    }
-    
-    .stApp[data-theme="dark"] .stMarkdown {
-        color: #ffffff !important;
-    }
-    
-    .stApp[data-theme="dark"] .stSelectbox label,
-    .stApp[data-theme="dark"] .stNumberInput label,
-    .stApp[data-theme="dark"] .stTextInput label {
-        color: #ffffff !important;
-    }
-    
-    .stApp[data-theme="dark"] .stMetric {
-        background-color: #2d2d2d !important;
-        color: #ffffff !important;
-    }
-    
-    .stApp[data-theme="dark"] .stMetric > div {
-        color: #ffffff !important;
-    }
-    
-    .stApp[data-theme="dark"] .stMetric label {
-        color: #ffffff !important;
-    }
-    
-    /* Ensure hero section text is visible in dark mode */
-    .stApp[data-theme="dark"] .hero-section h1 {
-        color: #ffffff !important;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
-    }
-    
-    .stApp[data-theme="dark"] .hero-section p {
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Create main container
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
-
-# Hero Section with enhanced design
-st.markdown('<div class="hero-section">', unsafe_allow_html=True)
-
-# Add floating elements for visual interest
-st.markdown("""
-<div style="position: relative; text-align: center;">
-    <div style="position: absolute; top: -50px; left: 10%; width: 100px; height: 100px; background: radial-gradient(circle, rgba(59, 130, 246, 0.3), transparent); border-radius: 50%; animation: float 6s ease-in-out infinite;"></div>
-    <div style="position: absolute; top: -30px; right: 15%; width: 60px; height: 60px; background: radial-gradient(circle, rgba(30, 64, 175, 0.2), transparent); border-radius: 50%; animation: float 8s ease-in-out infinite reverse;"></div>
-    <div style="position: absolute; bottom: -40px; left: 20%; width: 80px; height: 80px; background: radial-gradient(circle, rgba(147, 197, 253, 0.25), transparent); border-radius: 50%; animation: float 7s ease-in-out infinite;"></div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("# 🚰 Hydro-Asses")
-st.markdown('<p class="tagline"><strong>From Rooftop to Aquifer: Instant, Intelligent Water Potential Assessment</strong></p>', 
-            unsafe_allow_html=True)
-
-# Add stats with hydro-geological themed icons
-st.markdown("""
-<div style="display: flex; justify-content: center; gap: 6rem; margin: 3rem 0; flex-wrap: wrap;">
-    <div style="text-align: center;">
-        <div style="font-size: 4.5rem; font-weight: 900; color: #ffffff; text-shadow: 0 6px 32px rgba(0, 0, 0, 0.4); margin-bottom: 1.2rem;">🌊</div>
-        <div style="font-size: 2rem; color: #fff; font-weight: 800; text-shadow: 0 2px 12px rgba(0,0,0,0.25);">Instant Analysis</div>
-    </div>
-    <div style="text-align: center;">
-        <div style="font-size: 4.5rem; font-weight: 900; color: #ffffff; text-shadow: 0 6px 32px rgba(0, 0, 0, 0.4); margin-bottom: 1.2rem;">🗺️</div>
-        <div style="font-size: 2rem; color: #fff; font-weight: 800; text-shadow: 0 2px 12px rgba(0,0,0,0.25);">Global Coverage</div>
-    </div>
-    <div style="text-align: center;">
-        <div style="font-size: 4.5rem; font-weight: 900; color: #ffffff; text-shadow: 0 6px 32px rgba(0, 0, 0, 0.4); margin-bottom: 1.2rem;">📱</div>
-        <div style="font-size: 2rem; color: #fff; font-weight: 800; text-shadow: 0 2px 12px rgba(0,0,0,0.25);">Mobile-First</div>
+<div class="header-bar">
+    <div class="header-content">
+        <div class="logo-section">
+            <div class="logo-icon">💧</div>
+            <div>
+                <div class="logo-text">HYDRO-ASSESS</div>
+                <div class="logo-subtitle">by Team Aether Spark</div>
+            </div>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Call-to-Action Section - Enhanced with multiple options
-st.markdown('<div class="cta-section">', unsafe_allow_html=True)
-st.markdown("## 🚀 Discover Your Property's Potential")
+# Hero Section
 st.markdown("""
-<p style="font-size: 1.4rem; margin-bottom: 2rem; text-align: center; color: rgba(255, 255, 255, 0.95); font-weight: 300; letter-spacing: 0.5px;">
-✨ Get instant insights about your property's water management potential with our AI-powered assessment tool ✨
-</p>
+<div class="hero-section">
+    <div class="hero-subtitle">Smart Water Management Solution</div>
+    <h1 class="hero-title">Intelligent Rainwater Harvesting Assessment</h1>
+    <div style="max-width: 950px; margin: 0 auto; text-align: center; padding: 0 2rem;">
+        <p class="tagline">
+            Our platform helps you assess rainwater harvesting potential by combining
+            satellite mapping, soil data analysis, and rainfall patterns to provide
+            customized recommendations for your property.
+        </p>
+    </div>
+    <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; max-width: 1100px; margin-left: auto; margin-right: auto; padding: 0 2rem; align-items: stretch;">
+        <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; cursor: pointer; flex: 1; min-width: 240px; max-width: 320px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);" onmouseover="this.style.transform='translateY(-8px)'; this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(46, 139, 87, 0.5)'; this.style.boxShadow='0 16px 48px rgba(0, 0, 0, 0.2)'; this.querySelector('.stat-number').style.color='#ffffff'; this.querySelector('.stat-number').style.transform='scale(1.15)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.95)'" onmouseout="this.style.transform='translateY(0px)'; this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.1)'; this.querySelector('.stat-number').style.color='#2E8B57'; this.querySelector('.stat-number').style.transform='scale(1)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.8)'">
+            <div class="stat-number" style="font-size: 3rem; font-weight: 900; color: #2E8B57; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">2</div>
+            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">API Integrations<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">ISRIC SoilGrids & Open-Meteo</span></div>
+        </div>
+        <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; cursor: pointer; flex: 1; min-width: 240px; max-width: 320px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);" onmouseover="this.style.transform='translateY(-8px)'; this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(46, 139, 87, 0.5)'; this.style.boxShadow='0 16px 48px rgba(0, 0, 0, 0.2)'; this.querySelector('.stat-number').style.color='#ffffff'; this.querySelector('.stat-number').style.transform='scale(1.15)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.95)'" onmouseout="this.style.transform='translateY(0px)'; this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.1)'; this.querySelector('.stat-number').style.color='#2E8B57'; this.querySelector('.stat-number').style.transform='scale(1)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.8)'">
+            <div class="stat-number" style="font-size: 3rem; font-weight: 900; color: #2E8B57; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">3</div>
+            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">System Types<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">Storage, Recharge & Hybrid</span></div>
+        </div>
+        <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; cursor: pointer; flex: 1; min-width: 240px; max-width: 320px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);" onmouseover="this.style.transform='translateY(-8px)'; this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(46, 139, 87, 0.5)'; this.style.boxShadow='0 16px 48px rgba(0, 0, 0, 0.2)'; this.querySelector('.stat-number').style.color='#ffffff'; this.querySelector('.stat-number').style.transform='scale(1.15)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.95)'" onmouseout="this.style.transform='translateY(0px)'; this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.1)'; this.querySelector('.stat-number').style.color='#2E8B57'; this.querySelector('.stat-number').style.transform='scale(1)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.8)'">
+            <div class="stat-number" style="font-size: 3rem; font-weight: 900; color: #2E8B57; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">6</div>
+            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">Team Members<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">Team Aether Spark</span></div>
+        </div>
+    </div>
+</div>
 """, unsafe_allow_html=True)
 
-# Create navigation buttons for different tools - Responsive design
+# Primary CTAs
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05)); padding: 2rem; border-radius: 20px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); margin-bottom: 1rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">💧</div>
-        <h3 style="color: #ffffff; margin-bottom: 1rem; font-size: 1.5rem; font-weight: 700;">Harvesting Potential</h3>
-        <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem; line-height: 1.6; font-size: 1rem;">Analyze your property's rainwater harvesting potential using soil data, rainfall patterns, and terrain analysis.</p>
+    <div class="feature-card">
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7V12C2 16.5 4.23 20.68 7.62 23.15L12 21L16.38 23.15C19.77 20.68 22 16.5 22 12V7L12 2Z" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 8V16" stroke="#2E8B57" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="3" stroke="#2E8B57" stroke-width="2"/>
+            </svg>
+        </div>
+        <h3>Map Your Property</h3>
+        <p style="font-size: 1rem; color: rgba(255,255,255,0.8); margin-bottom: 1.5rem;">
+            Define your catchment area using interactive satellite imagery. Draw precise boundaries and calculate areas instantly.
+        </p>
     </div>
     """, unsafe_allow_html=True)
-    
-    if st.button("💧 Analyze Harvesting Potential", key="calc_btn", use_container_width=True):
-        st.switch_page("pages/calc.py")
+    if st.button("🗺️ Map Your Property", key="map_btn", use_container_width=True):
+        st.switch_page("pages/map.py")
 
 with col2:
     st.markdown("""
-    <div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05)); padding: 2rem; border-radius: 20px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); margin-bottom: 1rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🗺️</div>
-        <h3 style="color: #ffffff; margin-bottom: 1rem; font-size: 1.5rem; font-weight: 700;">Area Calculator</h3>
-        <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem; line-height: 1.6; font-size: 1rem;">Draw on satellite imagery to calculate precise areas for your water management projects.</p>
+    <div class="feature-card">
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 9V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H8V12H16V22H20C20.5304 22 21.0391 21.7893 21.4142 21.4142C21.7893 21.0391 22 20.5304 22 20V9L12 2Z" stroke="#005A9C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 15H15" stroke="#005A9C" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h3>Start Assessment</h3>
+        <p style="font-size: 1rem; color: rgba(255,255,255,0.8); margin-bottom: 1.5rem;">
+            Generate comprehensive analysis with system recommendations, financial projections, and technical specifications.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("⚙️ Start Assessment", key="calc_btn", use_container_width=True):
+        st.switch_page("pages/calc.py")
+
+# About Our Team
+st.markdown("""
+<div class="section">
+    <h2 style="text-align: center; margin-bottom: 3rem;">About Team Aether Spark</h2>
+    <div class="about-card">
+        <p style="font-size: 1.125rem; text-align: center; margin-bottom: 2rem;">
+            We are <strong style="color: #2E8B57;">Team Aether Spark</strong>, a group of 6 passionate students 
+            participating in the Smart India Hackathon 2025. Our mission is to create an accessible tool 
+            that helps people understand and implement rainwater harvesting effectively.
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+            <div class="stat-box">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Team Members</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">SIH</div>
+                <div class="stat-label">2025</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Key Features</div>
+            </div>
+        </div>
+        <p style="text-align: center; font-size: 1rem; color: rgba(255,255,255,0.8); margin-top: 2rem;">
+            Our project combines mapping technology, real-world data APIs, and engineering calculations 
+            to provide practical rainwater harvesting recommendations.
+        </p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# How It Works - Technical Details
+st.markdown("""
+<div class="section">
+    <h2 style="text-align: center; margin-bottom: 4rem;">How Our System Works</h2>
+    <div style="background: rgba(255,255,255,0.05); border-radius: 20px; padding: 3rem; margin-bottom: 3rem; border: 1px solid rgba(255,255,255,0.1);">
+        <p style="font-size: 1.25rem; text-align: center; color: rgba(255,255,255,0.9); margin-bottom: 4rem; max-width: 900px; margin-left: auto; margin-right: auto;">
+            Our comprehensive platform integrates multiple data sources and advanced calculations to provide accurate rainwater harvesting assessments tailored to your specific location and requirements.
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem;">
+            <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
+                        🗺️
+                    </div>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Interactive Mapping</h4>
+                </div>
+                <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
+                    Users can draw precise polygons on high-resolution satellite maps to define their exact catchment area. Our system uses advanced geodesic calculations to provide real-time area measurements with sub-meter accuracy.
+                </p>
+            </div>
+            <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
+                        🌧️
+                    </div>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Rainfall Analysis</h4>
+                </div>
+                <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
+                    We integrate with Open-Meteo API to fetch detailed historical rainfall data spanning 40+ years. This enables accurate water yield calculations accounting for seasonal variations and long-term climate patterns.
+                </p>
+            </div>
+            <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
+                        🔬
+                    </div>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Soil Intelligence</h4>
+                </div>
+                <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
+                    Using ISRIC SoilGrids global database, we analyze soil permeability, clay content, and infiltration rates to determine groundwater recharge feasibility and recommend appropriate system types.
+                </p>
+            </div>
+            <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
+                        📊
+                    </div>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Smart Recommendations</h4>
+                </div>
+                <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
+                    Our AI engine analyzes all collected data to recommend the optimal rainwater harvesting system: Storage Only for immediate use, Recharge Only for groundwater replenishment, or Hybrid for maximum efficiency.
+                </p>
+            </div>
+            <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
+                        💰
+                    </div>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Cost Analysis</h4>
+                </div>
+                <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
+                    Comprehensive cost breakdown including material expenses, installation costs, maintenance projections, and ROI calculations to help you make informed financial decisions.
+                </p>
+            </div>
+            <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
+                        📄
+                    </div>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Professional Reports</h4>
+                </div>
+                <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
+                    Generate detailed PDF reports with technical specifications, implementation guidelines, charts, and engineering drawings suitable for professional documentation and permitting.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# How It Works Section (3-Step Process)
+st.markdown("""
+<div class="section">
+    <h2 style="text-align: center; margin-bottom: 3rem;">Simple 3-Step Process</h2>
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 10C21 17 12 23 12 23S3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+                <circle cx="12" cy="10" r="3" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+            </svg>
+        </div>
+        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">Map Your Area</h4>
+        <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+            Use our interactive satellite map to define your catchment area with precision.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 11L12 14L22 4" stroke="white" stroke-width="1.5" stroke-opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="white" stroke-width="1.5" stroke-opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">Get Instant Analysis</h4>
+        <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+            Our engine fetches rainfall data, soil composition, and generates recommendations.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+                <path d="M14 2V8H20" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+                <path d="M16 13H8" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+                <path d="M16 17H8" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+            </svg>
+        </div>
+        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">Download Your Report</h4>
+        <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+            Receive a comprehensive PDF with designs, costs, and ROI projections.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Features Section
+st.markdown("""
+<div class="section">
+    <h2 style="text-align: center; margin-bottom: 4rem;">Key Features</h2>
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2 = st.columns([1, 1], gap="large")
+
+with col1:
+    st.markdown("""
+    <div class="feature-card">
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="#2E8B57" stroke-width="1.5"/>
+                <path d="M3 9H21" stroke="#2E8B57" stroke-width="1.5"/>
+                <path d="M9 3V21" stroke="#2E8B57" stroke-width="1.5"/>
+                <path d="M7 15L12 10L14 12L17 9" stroke="#2E8B57" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <h3>Precise Area Mapping</h3>
+        <p>
+            Advanced satellite imagery integration with geodesic calculations for accurate area measurement. 
+            Draw complex polygons to define exact catchment boundaries with real-time feedback.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
-    if st.button("🗺️ Calculate Area", key="map_btn", use_container_width=True):
-        st.switch_page("pages/map.py")
+    st.markdown("""
+    <div class="feature-card">
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C17.523 2 22 6.477 22 12C22 17.523 17.523 22 12 22C6.477 22 2 17.523 2 12C2 6.477 6.477 2 12 2Z" stroke="#005A9C" stroke-width="1.5"/>
+                <path d="M12 6V12L16 14" stroke="#005A9C" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h3>API-Driven Data</h3>
+        <p>
+            Real-time integration with ISRIC SoilGrids for soil permeability data and Open-Meteo for historical rainfall patterns, ensuring accuracy and reliability in every assessment.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Add a demo section - Responsive design
+with col2:
+    st.markdown("""
+    <div class="feature-card">
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.29 3.86L1.82 18C1.64539 18.3024 1.55296 18.6453 1.55199 18.9945C1.55102 19.3437 1.64153 19.6871 1.81442 19.9905C1.98731 20.2939 2.23674 20.5467 2.53771 20.7239C2.83868 20.901 3.1808 20.9962 3.53 21H20.47C20.8192 20.9962 21.1613 20.901 21.4623 20.7239C21.7633 20.5467 22.0127 20.2939 22.1856 19.9905C22.3585 19.6871 22.449 19.3437 22.448 18.9945C22.447 18.6453 22.3546 18.3024 22.18 18L13.71 3.86C13.5318 3.56611 13.2807 3.32313 12.9812 3.15449C12.6817 2.98585 12.3438 2.89726 12 2.89726C11.6562 2.89726 11.3183 2.98585 11.0188 3.15449C10.7193 3.32313 10.4682 3.56611 10.29 3.86Z" stroke="#2E8B57" stroke-width="1.5"/>
+                <path d="M12 9V13" stroke="#2E8B57" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="12" cy="17" r="1" fill="#2E8B57"/>
+            </svg>
+        </div>
+        <h3>Automated System Design</h3>
+        <p>
+            Intelligent recommendation engine analyzes your data to suggest optimal systems: Storage Only, Recharge Only, or Hybrid configurations based on your specific requirements.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="feature-card">
+        <div class="icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="7" width="20" height="14" rx="2" stroke="#005A9C" stroke-width="1.5"/>
+                <path d="M16 7V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V7" stroke="#005A9C" stroke-width="1.5"/>
+                <path d="M12 11V17" stroke="#005A9C" stroke-width="1.5"/>
+                <path d="M9 14H15" stroke="#005A9C" stroke-width="1.5"/>
+            </svg>
+        </div>
+        <h3>Financial ROI Analysis</h3>
+        <p>
+            Complete cost breakdown, payback period calculations, and 10-year financial projections including water savings, maintenance costs, and implementation expenses.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Credibility Section
 st.markdown("""
-<div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); padding: 2rem; border-radius: 20px; margin: 2rem 0; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px);">
-    <h3 style="color: #ffffff; text-align: center; margin-bottom: 1.5rem; font-size: 1.8rem;">🎯 How It Works</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; text-align: center;">
-        <div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 15px;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📍</div>
-            <h4 style="color: #ffffff; margin-bottom: 0.5rem; font-size: 1.2rem; font-weight: 600;">Enter Location</h4>
-            <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; line-height: 1.5;">Provide your property coordinates or use GPS</p>
-        </div>
-        <div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 15px;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔬</div>
-            <h4 style="color: #ffffff; margin-bottom: 0.5rem; font-size: 1.2rem; font-weight: 600;">AI Analysis</h4>
-            <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; line-height: 1.5;">Our system fetches soil and rainfall data</p>
-        </div>
-        <div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 15px;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📊</div>
-            <h4 style="color: #ffffff; margin-bottom: 0.5rem; font-size: 1.2rem; font-weight: 600;">Get Results</h4>
-            <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; line-height: 1.5;">Receive instant water potential assessment</p>
+<div class="section">
+    <h2 style="text-align: center; margin-bottom: 3rem;">Powered By Global Leaders</h2>
+    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; border: 1px solid rgba(255,255,255,0.1);">
+        <p style="text-align: center; font-size: 1.125rem; margin-bottom: 2rem; color: rgba(255,255,255,0.9);">
+            Our analysis is powered by global leaders in geospatial and environmental data,<br>
+            ensuring accuracy and reliability in every assessment.
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
+            <div style="text-align: center;">
+                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">ISRIC SoilGrids</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">Global soil property database with 250m resolution</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">Open-Meteo</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">Historical weather data and precipitation analysis</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">Satellite Imagery</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">High-resolution mapping for precise calculations</div>
+            </div>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
 
-# Problem Section with enhanced readability
-st.markdown('<div class="content-section">', unsafe_allow_html=True)
-st.markdown("## 🔍 The Challenge: A Disconnected Approach")
+
+# Final CTA
 st.markdown("""
-The current landscape of water management tools presents a critical gap. On one end, we have 
-oversimplified calculators that provide basic collection estimates but miss the bigger picture. 
-On the other, complex GIS platforms require extensive expertise and resources, making them 
-inaccessible to most property owners and small-scale planners. 
-
-**The core issue:** Users can calculate how much rainwater they can collect from their rooftops, 
-but determining whether they can safely recharge it into the ground remains a mystery—leaving 
-tremendous potential untapped.
-
-<div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 15px; margin: 1.5rem 0; border-left: 4px solid #ff6b6b;">
-<strong>💡 Key Insight:</strong> The disconnect between collection and recharge assessment is the 
-biggest barrier to effective water management at the property level.
+<div class="section" style="text-align: center; margin-top: 4rem;">
+    <h2 style="margin-bottom: 1.5rem;">Get Started with Hydro-Assess</h2>
+    <p style="font-size: 1.25rem; color: rgba(255,255,255,0.9); margin-bottom: 2rem;">
+        Assess your rainwater harvesting potential in minutes with our free tool.
+    </p>
 </div>
 """, unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
 
-# Solution Section with enhanced readability
-st.markdown('<div class="content-section">', unsafe_allow_html=True)
-st.markdown("## 💡 Our Solution: An Integrated, Instant Assessment")
+col1, col2, col3 = st.columns([1,2,1])
+with col2:
+    if st.button("🚀 Begin Assessment", key="final_cta", use_container_width=True):
+        st.switch_page("pages/calc.py")
+
+# Simple Footer
 st.markdown("""
-Hydro-Assess bridges this gap with a **mobile-first tool** that combines the simplicity of a 
-smartphone app with the analytical power of professional GIS systems. By automatically 
-leveraging your phone's GPS location, our platform instantly fetches critical local data—**rainfall 
-patterns, soil composition, and terrain slope**—to deliver a comprehensive assessment of both 
-rainwater harvesting and groundwater recharge potential. 
-
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
-<div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1)); padding: 1.5rem; border-radius: 15px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(15px); transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);">
-<strong style="font-size: 1.2rem; display: block; margin-bottom: 0.8rem; color: #ffffff;">📱 Mobile-First</strong>
-<span style="font-size: 1rem; opacity: 0.9; color: #ffffff;">Simple smartphone interface</span>
-</div>
-<div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1)); padding: 1.5rem; border-radius: 15px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(15px); transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);">
-<strong style="font-size: 1.2rem; display: block; margin-bottom: 0.8rem; color: #ffffff;">🌍 GPS-Powered</strong>
-<span style="font-size: 1rem; opacity: 0.9; color: #ffffff;">Automatic location detection</span>
-</div>
-<div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1)); padding: 1.5rem; border-radius: 15px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(15px); transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);">
-<strong style="font-size: 1.2rem; display: block; margin-bottom: 0.8rem; color: #ffffff;">⚡ Instant Results</strong>
-<span style="font-size: 1rem; opacity: 0.9; color: #ffffff;">No expertise required</span>
-</div>
-</div>
-y
-**No expertise required, no complex setup needed.** Just instant, actionable insights about your property's water management capacity.
-""", unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Add key features section - More authentic and professional
-st.markdown("""
-<div style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); padding: 3rem 2rem; border-radius: 20px; margin: 3rem 0; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px);">
-    <h3 style="color: #ffffff; text-align: center; margin-bottom: 2rem; font-size: 2rem; font-weight: 700;">🔬 Powered by Advanced Technology</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-        <div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 15px; border-left: 4px solid #3b82f6;">
-            <div style="font-size: 2rem; margin-bottom: 1rem;">🌍</div>
-            <h4 style="color: #ffffff; margin-bottom: 0.5rem; font-size: 1.3rem; font-weight: 600;">ISRIC SoilGrids Integration</h4>
-            <p style="color: rgba(255, 255, 255, 0.9); line-height: 1.6; font-size: 0.95rem;">Access global soil data from the world's most comprehensive soil database for accurate assessments.</p>
-        </div>
-        <div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 15px; border-left: 4px solid #1e40af;">
-            <div style="font-size: 2rem; margin-bottom: 1rem;">🛰️</div>
-            <h4 style="color: #ffffff; margin-bottom: 0.5rem; font-size: 1.3rem; font-weight: 600;">Satellite Imagery Analysis</h4>
-            <p style="color: rgba(255, 255, 255, 0.9); line-height: 1.6; font-size: 0.95rem;">High-resolution satellite imagery for precise area calculations and terrain analysis.</p>
-        </div>
-        <div style="background: rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 15px; border-left: 4px solid #1d4ed8;">
-            <div style="font-size: 2rem; margin-bottom: 1rem;">⚡</div>
-            <h4 style="color: #ffffff; margin-bottom: 0.5rem; font-size: 1.3rem; font-weight: 600;">Real-time Processing</h4>
-            <p style="color: rgba(255, 255, 255, 0.9); line-height: 1.6; font-size: 0.95rem;">Instant results powered by cloud computing and optimized algorithms for immediate insights.</p>
-        </div>
+<div class="footer">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">💧</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">HYDRO-ASSESS</h3>
+        <p style="font-size: 0.875rem; color: rgba(255,255,255,0.6); margin-bottom: 1rem;">
+            Smart India Hackathon 2025 Project
+        </p>
+        <p style="font-size: 0.875rem; color: rgba(255,255,255,0.7);">
+            Built by Team Aether Spark
+        </p>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Enhanced Footer
 st.markdown("""
-<div class="custom-footer">
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; align-items: start;">
-<div style="text-align: center;">
-<div style="margin-bottom: 1rem; font-size: 3rem;">🏭</div>
-<div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: #ffffff;">🇮🇳 Designed for India</div>
-<div style="font-size: 0.95rem; opacity: 0.8; color: #ffffff;">Tailored for Indian water challenges and climate patterns</div>
-</div>
-<div style="text-align: center;">
-<div style="font-size: 3rem; margin-bottom: 1rem;">🔬</div>
-<div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: #ffffff;">Advanced Analytics</div>
-<div style="font-size: 0.95rem; opacity: 0.8; color: #ffffff;">Powered by ISRIC SoilGrids and GIS technology</div>
-</div>
-<div style="text-align: center;">
-<div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
-<div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: #ffffff;">Mobile-First</div>
-<div style="font-size: 0.95rem; opacity: 0.8; color: #ffffff;">Accessible anywhere, anytime on any device</div>
-</div>
-<div style="text-align: center;">
-<div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
-<div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: #ffffff;">Instant Results</div>
-<div style="font-size: 0.95rem; opacity: 0.8; color: #ffffff;">Get assessments in seconds, not hours</div>
-</div>
-</div>
-
-<div style="border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 2rem; text-align: center;">
-<div style="margin-bottom: 1rem;">
-<span style="font-size: 1.5rem;">💧</span> <strong style="color: #ffffff; font-size: 1.2rem;">Smart water management for sustainable futures</strong>
-</div>
-<div style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; margin-top: 1rem;">
-© 2024 Hydro-Assess. Empowering sustainable water management through technology.
-</div>
-</div>
+<div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem; margin-top: 2rem; text-align: center;">
+    <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+        © 2025 Team Aether Spark | SIH 2025
+    </p>
+    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.5rem;">
+        Data Sources: ISRIC SoilGrids API | Open-Meteo API | Folium Maps
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
-# Close main container
-st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+# End of Hydro-Assess Landing Page
