@@ -126,9 +126,9 @@ st.markdown("""
     
     /* Enhanced tabs using Streamlit's native theme variables */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 15px;
-        padding: 10px 15px;
-        border-radius: 20px;
+        gap: 18px;
+        padding: 12px 18px;
+        border-radius: 24px;
         backdrop-filter: blur(15px);
         margin-bottom: 25px;
         transition: all 0.3s ease;
@@ -142,7 +142,7 @@ st.markdown("""
     }
     
     .stTabs [data-baseweb="tab"] {
-        border-radius: 15px;
+        border-radius: 18px;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         font-weight: 500;
         padding: 14px 24px !important;
@@ -189,10 +189,11 @@ st.markdown("""
     /* Enhanced Hover States - More Visible */
     .stTabs [data-baseweb="tab"]:hover {
         background: linear-gradient(135deg, 
-            rgba(59, 130, 246, 0.1) 0%, 
-            rgba(37, 99, 235, 0.05) 100%) !important;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 
-                    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+            rgba(59, 130, 246, 0.15) 0%, 
+            rgba(37, 99, 235, 0.08) 100%) !important;
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15),
+                    0 4px 15px rgba(0, 0, 0, 0.1) !important;
         border-color: rgba(59, 130, 246, 0.4) !important;
         color: var(--text-color) !important;
     }
@@ -209,22 +210,52 @@ st.markdown("""
         position: relative;
     }
     
-    /* Active Tab - Beautiful Blue Background */
+    /* Active Tab - Enhanced Professional Styling */
     .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, 
-            var(--primary-color) 0%, 
-            #1e40af 100%) !important;
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4), 
-                    0 4px 12px rgba(37, 99, 235, 0.3), 
-                    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-        border: 2px solid var(--primary-color) !important;
+            #3b82f6 0%, 
+            #2563eb 50%,
+            #1d4ed8 100%) !important;
+        color: white !important;
+        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.3), 
+                    0 6px 20px rgba(37, 99, 235, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        border: 2px solid rgba(59, 130, 246, 0.8) !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Add a subtle shine effect to active tab */
+    .stTabs [aria-selected="true"]::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+            transparent 0%, 
+            rgba(255, 255, 255, 0.15) 50%, 
+            transparent 100%);
+        animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { left: -100%; }
+        50% { left: -100%; }
+        100% { left: 100%; }
     }
     
     /* Active Tab Hover */
     .stTabs [aria-selected="true"]:hover {
         transform: translateY(-4px) scale(1.06) !important;
-        box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5), 
-                    0 6px 18px rgba(37, 99, 235, 0.4) !important;
+        box-shadow: 0 16px 50px rgba(59, 130, 246, 0.4), 
+                    0 8px 25px rgba(37, 99, 235, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+        background: linear-gradient(135deg, 
+            #4f46e5 0%, 
+            #3b82f6 50%,
+            #2563eb 100%) !important;
     }
     
     /* Ensure tabs container takes full width */
