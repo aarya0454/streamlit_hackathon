@@ -28,13 +28,9 @@ from typing import Dict, Optional
 import base64
 import urllib.request
 import tempfile
-def install_hindi_font_directly():
-    """Direct installation of Hindi font using system commands"""
+def ensure_hindi_font():
+    """Download and ensure Hindi font is available"""
     try:
-        import subprocess
-        import platform
-
-        system = platform.system()
         font_name = 'NotoSansDevanagari-Regular.ttf'
         local_path = os.path.join(os.getcwd(), font_name)
 
@@ -42,41 +38,59 @@ def install_hindi_font_directly():
         if os.path.exists(local_path):
             return local_path
 
-        print("Attempting direct font installation...")
+        print("Downloading Hindi font...")
 
-        if system == 'Darwin':  # macOS
-            # Try to use curl to download directly
+        # Try multiple download methods
+        font_urls = [
+            'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf',
+            'https://fonts.gstatic.com/ea/notosansdevanagari/v1/NotoSansDevanagari-Regular.ttf',
+            'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-devanagari@4.0.0/files/noto-sans-devanagari-all-400-normal.woff'
+        ]
+
+        for url in font_urls:
             try:
-                url = 'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf'
-                subprocess.run(['curl', '-L', '-o', local_path, url], check=True, timeout=60)
-                print(f"Downloaded font using curl: {local_path}")
-                return local_path
-            except subprocess.CalledProcessError:
-                print("curl download failed")
+                print(f"Trying to download from: {url}")
 
-            # Try wget as alternative
-            try:
-                url = 'https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf'
-                subprocess.run(['wget', '-O', local_path, url], check=True, timeout=60)
-                print(f"Downloaded font using wget: {local_path}")
-                return local_path
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print("wget download failed")
+                # Try urllib first
+                try:
+                    with urllib.request.urlopen(url, timeout=30) as response:
+                        with open(local_path, 'wb') as f:
+                            f.write(response.read())
+                    print(f"✅ Successfully downloaded Hindi font: {local_path}")
+                    return local_path
+                except Exception as e:
+                    print(f"urllib download failed: {e}")
 
-        elif system == 'Linux':
-            try:
-                # Try apt-get for Ubuntu/Debian
-                subprocess.run(['apt-get', 'update'], check=True, timeout=30)
-                subprocess.run(['apt-get', 'install', '-y', 'fonts-noto-devanagari'], check=True, timeout=60)
-                print("Installed Noto Devanagari font via apt-get")
-                return '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf'
-            except subprocess.CalledProcessError:
-                print("apt-get installation failed")
+                # Try curl if available
+                try:
+                    import subprocess
+                    subprocess.run(['curl', '-L', '-o', local_path, url],
+                                 check=True, timeout=60, capture_output=True)
+                    print(f"✅ Successfully downloaded Hindi font using curl: {local_path}")
+                    return local_path
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    print("curl download failed")
 
+                # Try wget if available
+                try:
+                    import subprocess
+                    subprocess.run(['wget', '-O', local_path, url],
+                                 check=True, timeout=60, capture_output=True)
+                    print(f"✅ Successfully downloaded Hindi font using wget: {local_path}")
+                    return local_path
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    print("wget download failed")
+
+            except Exception as e:
+                print(f"Failed to download from {url}: {e}")
+                continue
+
+        # If all downloads failed, try to create a fallback
+        print("All download methods failed, trying system fonts...")
         return None
 
     except Exception as e:
-        print(f"Direct font installation failed: {e}")
+        print(f"Font download failed: {e}")
         return None
 
 # Professional color scheme - minimal and clean
@@ -924,14 +938,10 @@ class HydroAssessPDFReport:
                      self._safe_paragraph(f"<b>{T('results_cost_rs')}</b>", self.styles['TableHeader'])]]
 
         for component, cost in design_financial['cost_breakdown'].items():
-            # Debug: Print component info
-            print(f"Processing component: '{component}' with cost: {cost}")
-            
             # Use proper translation keys for component names
             translation_key = f"cost_{component}"
             # Check if translation exists by trying to get it and comparing with key
             translated_name = T(translation_key)
-            print(f"Translation key: '{translation_key}' -> '{translated_name}'")
             
             if translated_name != translation_key:
                 display_name = translated_name
@@ -955,9 +965,7 @@ class HydroAssessPDFReport:
             # Ensure we don't have empty display names
             if not display_name or display_name.strip() == '':
                 display_name = component.replace('_', ' ').title()
-                print(f"Using fallback display name: '{display_name}'")
             
-            print(f"Final display name: '{display_name}'")
             cost_data.append([self._safe_paragraph(display_name, self.styles['TableCell']), 
                              self._safe_paragraph(f"₹ {cost:,.0f}", self.styles['TableCell'])])
 
@@ -1067,18 +1075,6 @@ class HydroAssessPDFReport:
         ]))
         story.append(env_header)
         story.append(Spacer(1, 0.2*inch))
-
-        # Debug: Print all the data being used
-        print(f"DEBUG: params keys: {list(params.keys()) if params else 'None'}")
-        print(f"DEBUG: recommendation keys: {list(recommendation.keys()) if recommendation else 'None'}")
-        print(f"DEBUG: design_financial keys: {list(design_financial.keys()) if design_financial else 'None'}")
-        print(f"DEBUG: site_data keys: {list(site_data.keys()) if site_data else 'None'}")
-        print(f"DEBUG: charts keys: {list(charts.keys()) if charts else 'None'}")
-
-        # Debug specific values that might be missing
-        print(f"DEBUG: household_coverage_percent: {recommendation.get('household_coverage_percent', 'MISSING')}")
-        print(f"DEBUG: volume_to_recharge: {recommendation.get('volume_to_recharge', 'MISSING')}")
-        print(f"DEBUG: annual_potential: {recommendation.get('annual_potential', 'MISSING')}")
 
         env_impact_data = [
             [self._safe_paragraph(T('results_water_independence'), self.styles['TableCell']),
