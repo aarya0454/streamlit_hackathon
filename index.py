@@ -6,13 +6,21 @@ Built by Team Aether Spark for SIH 2025
 
 import streamlit as st
 import datetime
+from translator import T, language_selector, main_page_language_selector 
+from locales import translations
+
+
+# Initialize language in session state FIRST
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'
 
 # Page configuration - must be the first Streamlit command
+# Use a generic title initially, will be updated via JavaScript
 st.set_page_config(
-    page_title="Hydro-Assess | Smart India Hackathon 2025",
+    page_title='Hydro-Assess',
     page_icon="💧",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"  # Changed to expanded to show language selector
 )
 
 # Professional CSS with static gradient and clean typography
@@ -486,15 +494,18 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# Add language selector to main page (at the top)
+main_page_language_selector()
+
 # Centered Header
-st.markdown("""
+st.markdown(f"""
 <div class="header-bar">
     <div class="header-content">
         <div class="logo-section">
             <div class="logo-icon">💧</div>
             <div>
-                <div class="logo-text">HYDRO-ASSESS</div>
-                <div class="logo-subtitle">by Team Aether Spark</div>
+                <div class="logo-text">{T('app_name')}</div>
+                <div class="logo-subtitle">{T('app_subtitle')}</div>
             </div>
         </div>
     </div>
@@ -502,29 +513,27 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Hero Section
-st.markdown("""
+st.markdown(f"""
 <div class="hero-section">
-    <div class="hero-subtitle">Smart Water Management Solution</div>
-    <h1 class="hero-title">Intelligent Rainwater Harvesting Assessment</h1>
+    <div class="hero-subtitle">{T('hero_subtitle')}</div>
+    <h1 class="hero-title">{T('hero_title')}</h1>
     <div style="max-width: 950px; margin: 0 auto; text-align: center; padding: 0 2rem;">
         <p class="tagline">
-            Our platform helps you assess rainwater harvesting potential by combining
-            satellite mapping, soil data analysis, and rainfall patterns to provide
-            customized recommendations for your property.
+            {T('hero_description')}
         </p>
     </div>
     <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; max-width: 1100px; margin-left: auto; margin-right: auto; padding: 0 2rem; align-items: stretch;">
         <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; cursor: pointer; flex: 1; min-width: 240px; max-width: 320px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);" onmouseover="this.style.transform='translateY(-8px)'; this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(46, 139, 87, 0.5)'; this.style.boxShadow='0 16px 48px rgba(0, 0, 0, 0.2)'; this.querySelector('.stat-number').style.color='#ffffff'; this.querySelector('.stat-number').style.transform='scale(1.15)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.95)'" onmouseout="this.style.transform='translateY(0px)'; this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.1)'; this.querySelector('.stat-number').style.color='#2E8B57'; this.querySelector('.stat-number').style.transform='scale(1)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.8)'">
             <div class="stat-number" style="font-size: 3rem; font-weight: 900; color: #2E8B57; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">2</div>
-            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">API Integrations<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">ISRIC SoilGrids & Open-Meteo</span></div>
+            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">{T('stat_api_integrations')}<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">{T('stat_api_subtitle')}</span></div>
         </div>
         <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; cursor: pointer; flex: 1; min-width: 240px; max-width: 320px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);" onmouseover="this.style.transform='translateY(-8px)'; this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(46, 139, 87, 0.5)'; this.style.boxShadow='0 16px 48px rgba(0, 0, 0, 0.2)'; this.querySelector('.stat-number').style.color='#ffffff'; this.querySelector('.stat-number').style.transform='scale(1.15)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.95)'" onmouseout="this.style.transform='translateY(0px)'; this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.1)'; this.querySelector('.stat-number').style.color='#2E8B57'; this.querySelector('.stat-number').style.transform='scale(1)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.8)'">
             <div class="stat-number" style="font-size: 3rem; font-weight: 900; color: #2E8B57; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">3</div>
-            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">System Types<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">Storage, Recharge & Hybrid</span></div>
+            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">{T('stat_system_types')}<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">{T('stat_system_subtitle')}</span></div>
         </div>
         <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; cursor: pointer; flex: 1; min-width: 240px; max-width: 320px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);" onmouseover="this.style.transform='translateY(-8px)'; this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(46, 139, 87, 0.5)'; this.style.boxShadow='0 16px 48px rgba(0, 0, 0, 0.2)'; this.querySelector('.stat-number').style.color='#ffffff'; this.querySelector('.stat-number').style.transform='scale(1.15)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.95)'" onmouseout="this.style.transform='translateY(0px)'; this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='0 4px 16px rgba(0, 0, 0, 0.1)'; this.querySelector('.stat-number').style.color='#2E8B57'; this.querySelector('.stat-number').style.transform='scale(1)'; this.querySelector('.stat-label').style.color='rgba(255, 255, 255, 0.8)'">
             <div class="stat-number" style="font-size: 3rem; font-weight: 900; color: #2E8B57; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">6</div>
-            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">Team Members<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">Team Aether Spark</span></div>
+            <div class="stat-label" style="color: rgba(255,255,255,0.8); font-size: 1rem; font-weight: 600; line-height: 1.4;">{T('stat_team_members')}<br><span style="font-size: 0.875rem; font-weight: 400; opacity: 0.9;">{T('stat_team_subtitle')}</span></div>
         </div>
     </div>
 </div>
@@ -534,7 +543,7 @@ st.markdown("""
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card">
         <div class="icon-wrapper">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -543,17 +552,17 @@ with col1:
                 <circle cx="12" cy="12" r="3" stroke="#2E8B57" stroke-width="2"/>
             </svg>
         </div>
-        <h3>Map Your Property</h3>
+        <h3>{T('feature_map_title')}</h3>
         <p style="font-size: 1rem; color: rgba(255,255,255,0.8); margin-bottom: 1.5rem;">
-            Define your catchment area using interactive satellite imagery. Draw precise boundaries and calculate areas instantly.
+            {T('feature_map_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("🗺️ Map Your Property", key="map_btn", use_container_width=True):
+    if st.button(T('nav_map'), key="map_btn", use_container_width=True):
         st.switch_page("pages/map.py")
 
 with col2:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card">
         <div class="icon-wrapper">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -561,54 +570,51 @@ with col2:
                 <path d="M9 15H15" stroke="#005A9C" stroke-width="2" stroke-linecap="round"/>
             </svg>
         </div>
-        <h3>Start Assessment</h3>
+        <h3>{T('feature_assessment_title')}</h3>
         <p style="font-size: 1rem; color: rgba(255,255,255,0.8); margin-bottom: 1.5rem;">
-            Generate comprehensive analysis with system recommendations, financial projections, and technical specifications.
+            {T('feature_assessment_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("⚙️ Start Assessment", key="calc_btn", use_container_width=True):
+    if st.button(T('nav_start_assessment'), key="calc_btn", use_container_width=True):
         st.switch_page("pages/calc.py")
 
 # About Our Team
-st.markdown("""
+st.markdown(f"""
 <div class="section">
-    <h2 style="text-align: center; margin-bottom: 3rem;">About Team Aether Spark</h2>
+    <h2 style="text-align: center; margin-bottom: 3rem;">{T('about_title')}</h2>
     <div class="about-card">
         <p style="font-size: 1.125rem; text-align: center; margin-bottom: 2rem;">
-            We are <strong style="color: #2E8B57;">Team Aether Spark</strong>, a group of 6 passionate students 
-            participating in the Smart India Hackathon 2025. Our mission is to create an accessible tool 
-            that helps people understand and implement rainwater harvesting effectively.
+            {T('about_description_1')} {T('about_description_2')}
         </p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
             <div class="stat-box">
                 <div class="stat-number">6</div>
-                <div class="stat-label">Team Members</div>
+                <div class="stat-label">{T('stat_team_members')}</div>
             </div>
             <div class="stat-box">
-                <div class="stat-number">SIH</div>
-                <div class="stat-label">2025</div>
+                <div class="stat-number">{T('stat_sih_year')}</div>
+                <div class="stat-label">{T('stat_year_2025')}</div>
             </div>
             <div class="stat-box">
                 <div class="stat-number">3</div>
-                <div class="stat-label">Key Features</div>
+                <div class="stat-label">{T('features_title')}</div>
             </div>
         </div>
         <p style="text-align: center; font-size: 1rem; color: rgba(255,255,255,0.8); margin-top: 2rem;">
-            Our project combines mapping technology, real-world data APIs, and engineering calculations 
-            to provide practical rainwater harvesting recommendations.
+            {T('about_project_desc')}
         </p>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # How It Works - Technical Details
-st.markdown("""
+st.markdown(f"""
 <div class="section">
-    <h2 style="text-align: center; margin-bottom: 4rem;">How Our System Works</h2>
+    <h2 style="text-align: center; margin-bottom: 4rem;">{T('how_it_works_title')}</h2>
     <div style="background: rgba(255,255,255,0.05); border-radius: 20px; padding: 3rem; margin-bottom: 3rem; border: 1px solid rgba(255,255,255,0.1);">
         <p style="font-size: 1.25rem; text-align: center; color: rgba(255,255,255,0.9); margin-bottom: 4rem; max-width: 900px; margin-left: auto; margin-right: auto;">
-            Our comprehensive platform integrates multiple data sources and advanced calculations to provide accurate rainwater harvesting assessments tailored to your specific location and requirements.
+            {T('how_it_works_desc')}
         </p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem;">
             <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
@@ -616,10 +622,10 @@ st.markdown("""
                     <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
                         🗺️
                     </div>
-                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Interactive Mapping</h4>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">{T('system_interactive_mapping')}</h4>
                 </div>
                 <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
-                    Users can draw precise polygons on high-resolution satellite maps to define their exact catchment area. Our system uses advanced geodesic calculations to provide real-time area measurements with sub-meter accuracy.
+                    {T('system_interactive_mapping_desc')}
                 </p>
             </div>
             <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
@@ -627,10 +633,10 @@ st.markdown("""
                     <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
                         🌧️
                     </div>
-                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Rainfall Analysis</h4>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">{T('system_rainfall_analysis')}</h4>
                 </div>
                 <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
-                    We integrate with Open-Meteo API to fetch detailed historical rainfall data spanning 40+ years. This enables accurate water yield calculations accounting for seasonal variations and long-term climate patterns.
+                    {T('system_rainfall_analysis_desc')}
                 </p>
             </div>
             <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
@@ -638,10 +644,10 @@ st.markdown("""
                     <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
                         🔬
                     </div>
-                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Soil Intelligence</h4>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">{T('system_soil_intelligence')}</h4>
                 </div>
                 <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
-                    Using ISRIC SoilGrids global database, we analyze soil permeability, clay content, and infiltration rates to determine groundwater recharge feasibility and recommend appropriate system types.
+                    {T('system_soil_intelligence_desc')}
                 </p>
             </div>
             <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
@@ -649,10 +655,10 @@ st.markdown("""
                     <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
                         📊
                     </div>
-                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Smart Recommendations</h4>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">{T('system_smart_recommendations')}</h4>
                 </div>
                 <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
-                    Our AI engine analyzes all collected data to recommend the optimal rainwater harvesting system: Storage Only for immediate use, Recharge Only for groundwater replenishment, or Hybrid for maximum efficiency.
+                    {T('system_smart_recommendations_desc')}
                 </p>
             </div>
             <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
@@ -660,10 +666,10 @@ st.markdown("""
                     <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
                         💰
                     </div>
-                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Cost Analysis</h4>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">{T('system_cost_analysis')}</h4>
                 </div>
                 <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
-                    Comprehensive cost breakdown including material expenses, installation costs, maintenance projections, and ROI calculations to help you make informed financial decisions.
+                    {T('system_cost_analysis_desc')}
                 </p>
             </div>
             <div class="system-card" style="background: rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
@@ -671,10 +677,10 @@ st.markdown("""
                     <div class="icon-bg" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2E8B57, #005A9C); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; transition: all 0.3s ease;">
                         📄
                     </div>
-                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">Professional Reports</h4>
+                    <h4 style="color: #2E8B57; margin: 0; font-size: 1.3rem; font-weight: 600;">{T('system_professional_reports')}</h4>
                 </div>
                 <p style="font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0;">
-                    Generate detailed PDF reports with technical specifications, implementation guidelines, charts, and engineering drawings suitable for professional documentation and permitting.
+                    {T('system_professional_reports_desc')}
                 </p>
             </div>
         </div>
@@ -683,16 +689,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # How It Works Section (3-Step Process)
-st.markdown("""
+st.markdown(f"""
 <div class="section">
-    <h2 style="text-align: center; margin-bottom: 3rem;">Simple 3-Step Process</h2>
+    <h2 style="text-align: center; margin-bottom: 3rem;">{T('process_title')}</h2>
 </div>
 """, unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("""
+    st.markdown(f"""
     <div class="step-card">
         <div class="step-number">1</div>
         <div class="icon-wrapper">
@@ -701,15 +707,15 @@ with col1:
                 <circle cx="12" cy="10" r="3" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
             </svg>
         </div>
-        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">Map Your Area</h4>
+        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">{T('step1_title')}</h4>
         <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
-            Use our interactive satellite map to define your catchment area with precision.
+            {T('step1_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("""
+    st.markdown(f"""
     <div class="step-card">
         <div class="step-number">2</div>
         <div class="icon-wrapper">
@@ -718,15 +724,15 @@ with col2:
                 <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="white" stroke-width="1.5" stroke-opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
-        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">Get Instant Analysis</h4>
+        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">{T('step2_title')}</h4>
         <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
-            Our engine fetches rainfall data, soil composition, and generates recommendations.
+            {T('step2_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 with col3:
-    st.markdown("""
+    st.markdown(f"""
     <div class="step-card">
         <div class="step-number">3</div>
         <div class="icon-wrapper">
@@ -737,24 +743,24 @@ with col3:
                 <path d="M16 17H8" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
             </svg>
         </div>
-        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">Download Your Report</h4>
+        <h4 style="color: white; font-size: 1.25rem; margin: 0.5rem 0;">{T('step3_title')}</h4>
         <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
-            Receive a comprehensive PDF with designs, costs, and ROI projections.
+            {T('step3_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 # Features Section
-st.markdown("""
+st.markdown(f"""
 <div class="section">
-    <h2 style="text-align: center; margin-bottom: 4rem;">Key Features</h2>
+    <h2 style="text-align: center; margin-bottom: 4rem;">{T('features_title')}</h2>
 </div>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card">
         <div class="icon-wrapper">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -764,15 +770,14 @@ with col1:
                 <path d="M7 15L12 10L14 12L17 9" stroke="#2E8B57" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </div>
-        <h3>Precise Area Mapping</h3>
+        <h3>{T('feature_precise_mapping')}</h3>
         <p>
-            Advanced satellite imagery integration with geodesic calculations for accurate area measurement. 
-            Draw complex polygons to define exact catchment boundaries with real-time feedback.
+            {T('feature_precise_mapping_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card">
         <div class="icon-wrapper">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -780,15 +785,15 @@ with col1:
                 <path d="M12 6V12L16 14" stroke="#005A9C" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
         </div>
-        <h3>API-Driven Data</h3>
+        <h3>{T('feature_api_driven')}</h3>
         <p>
-            Real-time integration with ISRIC SoilGrids for soil permeability data and Open-Meteo for historical rainfall patterns, ensuring accuracy and reliability in every assessment.
+            {T('feature_api_driven_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card">
         <div class="icon-wrapper">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -797,14 +802,14 @@ with col2:
                 <circle cx="12" cy="17" r="1" fill="#2E8B57"/>
             </svg>
         </div>
-        <h3>Automated System Design</h3>
+        <h3>{T('feature_automated_design')}</h3>
         <p>
-            Intelligent recommendation engine analyzes your data to suggest optimal systems: Storage Only, Recharge Only, or Hybrid configurations based on your specific requirements.
+            {T('feature_automated_design_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("""
+    st.markdown(f"""
     <div class="feature-card">
         <div class="icon-wrapper">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -814,34 +819,33 @@ with col2:
                 <path d="M9 14H15" stroke="#005A9C" stroke-width="1.5"/>
             </svg>
         </div>
-        <h3>Financial ROI Analysis</h3>
+        <h3>{T('feature_financial_analysis')}</h3>
         <p>
-            Complete cost breakdown, payback period calculations, and 10-year financial projections including water savings, maintenance costs, and implementation expenses.
+            {T('feature_financial_analysis_desc')}
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 # Credibility Section
-st.markdown("""
+st.markdown(f"""
 <div class="section">
-    <h2 style="text-align: center; margin-bottom: 3rem;">Powered By Global Leaders</h2>
+    <h2 style="text-align: center; margin-bottom: 3rem;">{T('credibility_title')}</h2>
     <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; border: 1px solid rgba(255,255,255,0.1);">
         <p style="text-align: center; font-size: 1.125rem; margin-bottom: 2rem; color: rgba(255,255,255,0.9);">
-            Our analysis is powered by global leaders in geospatial and environmental data,<br>
-            ensuring accuracy and reliability in every assessment.
+            {T('credibility_desc')}
         </p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
             <div style="text-align: center;">
-                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">ISRIC SoilGrids</div>
-                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">Global soil property database with 250m resolution</div>
+                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">{T('credibility_isric')}</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">{T('credibility_isric_desc')}</div>
             </div>
             <div style="text-align: center;">
-                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">Open-Meteo</div>
-                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">Historical weather data and precipitation analysis</div>
+                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">{T('credibility_openmeteo')}</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">{T('credibility_openmeteo_desc')}</div>
             </div>
             <div style="text-align: center;">
-                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">Satellite Imagery</div>
-                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">High-resolution mapping for precise calculations</div>
+                <div style="font-weight: 700; color: #2E8B57; margin-bottom: 0.5rem;">{T('credibility_satellite')}</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">{T('credibility_satellite_desc')}</div>
             </div>
         </div>
     </div>
@@ -851,40 +855,40 @@ st.markdown("""
 
 
 # Final CTA
-st.markdown("""
+st.markdown(f"""
 <div class="section" style="text-align: center; margin-top: 4rem;">
-    <h2 style="margin-bottom: 1.5rem;">Get Started with Hydro-Assess</h2>
+    <h2 style="margin-bottom: 1.5rem;">{T('cta_title')}</h2>
     <p style="font-size: 1.25rem; color: rgba(255,255,255,0.9); margin-bottom: 2rem;">
-        Assess your rainwater harvesting potential in minutes with our free tool.
+        {T('cta_description')}
     </p>
 </div>
 """, unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    if st.button("🚀 Begin Assessment", key="final_cta", use_container_width=True):
+    if st.button(T('cta_button'), key="final_cta", use_container_width=True):
         st.switch_page("pages/calc.py")
 
 # Simple Footer
-st.markdown("""
+st.markdown(f"""
 <div class="footer">
     <div style="text-align: center; margin-bottom: 2rem;">
         <div style="font-size: 2rem; margin-bottom: 0.5rem;">💧</div>
-        <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">HYDRO-ASSESS</h3>
+        <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">{T('app_name')}</h3>
         <p style="font-size: 0.875rem; color: rgba(255,255,255,0.6); margin-bottom: 1rem;">
-            Smart India Hackathon 2025 Project
+            {T('footer_project')}
         </p>
         <p style="font-size: 0.875rem; color: rgba(255,255,255,0.7);">
-            Built by Team Aether Spark
+            {T('footer_team')}
         </p>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("""
+st.markdown(f"""
 <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem; margin-top: 2rem; text-align: center;">
     <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
-        © 2025 Team Aether Spark | SIH 2025
+        {T('footer_copyright')}
     </p>
     <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.5rem;">
         Data Sources: ISRIC SoilGrids API | Open-Meteo API | Folium Maps

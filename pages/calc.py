@@ -1,10 +1,16 @@
 import streamlit as st
 import pandas as pd
+from translator import T, main_page_language_selector
 import numpy as np
 import requests
 import matplotlib.pyplot as plt
+# Configure matplotlib to handle Unicode characters
+import matplotlib
+matplotlib.rcParams['font.family'] = ['DejaVu Sans', 'Arial Unicode MS', 'sans-serif']
+matplotlib.rcParams['axes.unicode_minus'] = False
 from datetime import datetime
-from fpdf import FPDF
+# Importing our new professional PDF generator
+from pdf_generator import generate_professional_pdf
 import io
 import base64
 from shapely.geometry import Point
@@ -15,9 +21,13 @@ import os
 import time
 from typing import Optional, Dict
 
+# Initialize language in session state
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'
+
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="Hydro-Assess | Intelligent Recommendation Engine",
+    page_title=T('page_title_calc'),
     page_icon="💧",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -546,6 +556,10 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Add language selector to main page
+main_page_language_selector()
+
 if 'groundwater_gdf' not in st.session_state:
     st.session_state['groundwater_gdf'] = None
 if 'data_source' not in st.session_state:
@@ -909,10 +923,16 @@ def generate_recommendation(params):
         recommendation_type = "Storage Only"
         reason = "Groundwater level is too high (<8m), making recharge unsafe and ineffective."
     
-    # Rule 3: Urban Density Check
+    # Rule 3: Urban Density Check - FIXED to allow hybrid systems
     elif params['city_type'] == "Tier 1 (Metro - High Density)":
-        recommendation_type = "Recharge Only"
-        reason = "Prioritizing groundwater recharge is recommended in high-density urban areas to mitigate flooding and restore aquifers, assuming space for large storage tanks is limited."
+        # Check if there's enough potential for both storage and recharge
+        household_demand = params['household_size'] * 135 * 20  # 20-day buffer
+        if annual_potential > household_demand * 2:  # If potential is more than 2x household demand
+            recommendation_type = "Hybrid System"
+            reason = "High-density urban area with sufficient rainfall potential for both storage and groundwater recharge to mitigate flooding."
+        else:
+            recommendation_type = "Storage Only"
+            reason = "High-density urban area with limited rainfall potential - prioritizing direct water storage for household use."
     
     # Rule 4: Default - Hybrid System
     else:
@@ -929,7 +949,7 @@ def generate_recommendation(params):
     else:  # Hybrid System
         # Calculate household demand for 20-day buffer
         demand_liters = params['household_size'] * 135 * 20  # 135 LPCD standard
-        volume_to_store = min(demand_liters, annual_potential * 0.5)
+        volume_to_store = min(demand_liters, annual_potential * 0.6)  # Increased from 0.5 to 0.6
         volume_to_recharge = annual_potential - volume_to_store
     
     return {
@@ -1024,367 +1044,170 @@ def calculate_design_and_cost(recommendation_result, params):
     
     total_cost = sum(cost_breakdown.values())
     
-    # Financial Analysis
+    # Enhanced Financial Analysis - considers both storage and recharge benefits
     stored_water_m3_annual = recommendation_result['volume_to_store'] / 1000
-    annual_savings = stored_water_m3_annual * params['water_cost_per_m3']
+    recharged_water_m3_annual = recommendation_result['volume_to_recharge'] / 1000
     
-    # Additional benefits (not monetized but important)
-    flood_mitigation_benefit = recommendation_result['volume_to_recharge'] > 0
-    groundwater_recharge_benefit = recommendation_result['volume_to_recharge'] / 1000  # m³/year
+    # Direct savings from stored water
+    direct_water_savings = stored_water_m3_annual * params['water_cost_per_m3']
     
-    payback_period = total_cost / annual_savings if annual_savings > 0 else float('inf')
+    # Indirect benefits from groundwater recharge (estimated monetary value)
+    # Benefits: reduced flooding, groundwater table improvement, reduced municipal water stress
+    recharge_benefits = 0
+    if recharged_water_m3_annual > 0:
+        # Conservative estimate: ₹5 per m³ of recharged water in indirect benefits
+        # (flood mitigation, groundwater improvement, environmental benefits)
+        recharge_benefits = recharged_water_m3_annual * 5
+    
+    # Total annual savings/benefits
+    total_annual_savings = direct_water_savings + recharge_benefits
+    
+    # Financial metrics
+    payback_period = total_cost / total_annual_savings if total_annual_savings > 0 else float('inf')
+    
+    # Calculate 10-year ROI
+    if payback_period != float('inf') and payback_period > 0:
+        # ROI = (Total 10-year savings - Initial investment) / Initial investment * 100
+        total_10_year_savings = total_annual_savings * 10
+        maintenance_10_year = (total_cost * 0.02) * 10  # 2% annual maintenance for 10 years
+        net_10_year_benefit = total_10_year_savings - maintenance_10_year - total_cost
+        roi_10_year = (net_10_year_benefit / total_cost) * 100
+    else:
+        roi_10_year = -100  # Negative ROI if no payback
     
     return {
         'design': design,
         'cost_breakdown': cost_breakdown,
         'total_cost': total_cost,
-        'annual_savings': annual_savings,
+        'annual_savings': total_annual_savings,  # Now includes both direct and indirect benefits
+        'direct_water_savings': direct_water_savings,
+        'recharge_benefits': recharge_benefits,
         'payback_period_years': payback_period,
-        'flood_mitigation_benefit': flood_mitigation_benefit,
-        'groundwater_recharge_m3_annual': groundwater_recharge_benefit,
+        'roi_10_year': roi_10_year,  # Added missing ROI calculation
+        'flood_mitigation_benefit': recommendation_result['volume_to_recharge'] > 0,
+        'groundwater_recharge_m3_annual': recharged_water_m3_annual,
         'maintenance_cost_annual': total_cost * 0.02  # 2% of system cost annually
     }
 
 # --- PDF REPORT GENERATION ---
 
-class HydroAssessPDF(FPDF):
-    def header(self):
-        # Add gradient-like header with professional design
-        self.set_fill_color(41, 128, 185)  # Professional blue
-        self.rect(0, 0, 210, 30, 'F')
-        
-        # Main title
-        self.set_font('Helvetica', 'B', 18)
-        self.set_text_color(255, 255, 255)
-        self.set_y(8)
-        self.cell(0, 10, 'HYDRO-ASSESS', 0, 1, 'C')
-        
-        # Subtitle
-        self.set_font('Helvetica', '', 12)
-        self.cell(0, 6, 'Comprehensive Rainwater Harvesting Assessment Report', 0, 1, 'C')
-        
-        # Date
-        self.set_font('Helvetica', 'I', 9)
-        self.cell(0, 4, f'Generated on: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}', 0, 1, 'C')
-        
-        self.set_text_color(0, 0, 0)
-        self.ln(15)
+def safe_pdf_text(text):
+    """Convert text to ASCII-safe format for PDF generation"""
+    # If the current language is not English, use transliteration or fallback
+    if st.session_state.get('language', 'en') != 'en':
+        # For now, return the English version or a simplified version
+        # This is a workaround for PDF Unicode issues
+        try:
+            # Try to encode as latin-1 (PDF standard)
+            text.encode('latin-1')
+            return text
+        except:
+            # Return a placeholder or English version
+            return text.encode('ascii', 'ignore').decode('ascii')
+    return text
 
-    def footer(self):
-        self.set_y(-20)
-        # Footer line
-        self.set_draw_color(41, 128, 185)
-        self.set_line_width(0.5)
-        self.line(10, self.get_y(), 200, self.get_y())
-        
-        self.set_font('Helvetica', '', 8)
-        self.set_text_color(100, 100, 100)
-        self.ln(2)
-        self.cell(95, 10, 'Hydro-Assess - Smart Water Management Solutions', 0, 0, 'L')
-        self.cell(95, 10, f'Page {self.page_no()}', 0, 0, 'R')
-        self.set_text_color(0, 0, 0)
+# Old FPDF class removed - now using ReportLab-based generator in pdf_generator.py
+# which provides better Unicode support for Hindi, Tamil, and other languages
 
-    def chapter_title(self, title):
-        # Professional section header with icon-like element
-        self.set_font('Helvetica', 'B', 14)
-        self.set_fill_color(52, 152, 219)  # Modern blue
-        self.set_draw_color(52, 152, 219)
-        self.set_line_width(0.3)
-        
-        # Draw decorative line
-        self.line(10, self.get_y(), 30, self.get_y())
-        
-        # Title with colored background
-        self.set_text_color(52, 152, 219)
-        self.cell(0, 10, title, 0, 1, 'L')
-        
-        # Underline
-        self.set_draw_color(200, 200, 200)
-        self.set_line_width(0.2)
-        self.line(10, self.get_y(), 200, self.get_y())
-        
-        self.set_text_color(0, 0, 0)
-        self.ln(5)
+# The following HydroAssessPDF class has been commented out and replaced by ReportLab
+"""
+
+
+
+# """
+# def generate_pdf_report_old(params, recommendation, design_financial, site_data, charts: Optional[Dict[str, plt.Figure]] = None):
+#     # This function has been replaced by generate_professional_pdf in pdf_generator.py
+#     # which provides better Unicode support and professional layout
+#     pdf = HydroAssessPDF()
+#     pdf.add_page()
     
-    def add_info_box(self, title, content, color=(46, 204, 113)):
-        """Add an info box with colored border"""
-        self.set_draw_color(*color)
-        self.set_line_width(0.5)
-        self.set_fill_color(250, 250, 250)
-        
-        # Draw box
-        y_start = self.get_y()
-        self.rect(10, y_start, 190, 20, 'D')
-        
-        # Title
-        self.set_font('Helvetica', 'B', 10)
-        self.set_xy(12, y_start + 2)
-        self.cell(0, 5, title, 0, 1)
-        
-        # Content
-        self.set_font('Helvetica', '', 9)
-        self.set_xy(12, y_start + 8)
-        self.multi_cell(186, 4, content)
-        
-        self.ln(5)
-
-    def add_recommendation_section(self, recommendation):
-        self.chapter_title("EXECUTIVE SUMMARY")
-        
-        # Recommendation highlight box
-        self.set_fill_color(46, 204, 113)  # Green
-        self.set_draw_color(39, 174, 96)
-        self.set_line_width(0.5)
-        self.rect(10, self.get_y(), 190, 15, 'FD')
-        
-        self.set_font('Helvetica', 'B', 12)
-        self.set_text_color(255, 255, 255)
-        self.set_y(self.get_y() + 5)
-        self.cell(0, 5, f"RECOMMENDED STRATEGY: {recommendation['recommendation_type'].upper()}", 0, 1, 'C')
-        self.set_text_color(0, 0, 0)
-        self.ln(10)
-        
-        # Rationale section
-        self.set_font('Helvetica', 'B', 11)
-        self.cell(0, 6, "Strategic Rationale:", 0, 1)
-        self.set_font('Helvetica', '', 10)
-        self.multi_cell(0, 5, recommendation['reason'])
-        self.ln(5)
-        
-        # Key Performance Indicators - Visual Grid
-        self.set_font('Helvetica', 'B', 11)
-        self.cell(0, 8, "Key Performance Indicators", 0, 1)
-        self.ln(3)
-        
-        # Create metric cards
-        metrics = [
-            ("Annual Harvest", f"{recommendation['annual_potential']:,.0f} L", (52, 152, 219)),
-            ("Storage", f"{recommendation['volume_to_store']:,.0f} L", (155, 89, 182)),
-            ("Recharge", f"{recommendation['volume_to_recharge']:,.0f} L", (26, 188, 156)),
-            ("Efficiency", recommendation['efficiency_rating'], (243, 156, 18))
-        ]
-        
-        x_start = 10
-        y_start = self.get_y()
-        card_width = 45
-        card_height = 25
-        
-        for i, (label, value, color) in enumerate(metrics):
-            x = x_start + (i % 2) * (card_width + 5)
-            y = y_start + (i // 2) * (card_height + 5)
-            
-            # Draw card
-            self.set_fill_color(*color)
-            self.set_draw_color(*color)
-            self.rect(x, y, card_width, card_height, 'F')
-            
-            # Add text
-            self.set_text_color(255, 255, 255)
-            self.set_font('Helvetica', 'B', 9)
-            self.set_xy(x + 2, y + 5)
-            self.cell(card_width - 4, 5, label, 0, 1, 'C')
-            
-            self.set_font('Helvetica', 'B', 11)
-            self.set_xy(x + 2, y + 13)
-            self.cell(card_width - 4, 6, value, 0, 1, 'C')
-        
-        self.set_text_color(0, 0, 0)
-        self.set_y(y_start + (len(metrics) // 2 + 1) * (card_height + 5))
-        self.ln(5)
-
-    def add_design_section(self, design_data):
-        self.chapter_title("RECOMMENDED SYSTEM DESIGN & SPECIFICATIONS")
-        
-        if 'storage_tank' in design_data['design']:
-            tank = design_data['design']['storage_tank']
-            self.set_font('Helvetica', 'B', 11)
-            self.cell(0, 8, "Storage System:", 0, 1)
-            self.set_font('Helvetica', '', 10)
-            self.cell(0, 6, f"- Tank Type: {tank['type']}", 0, 1)
-            self.cell(0, 6, f"- Capacity: {tank['volume_liters']:,.0f} L ({tank['volume_m3']:.1f} m3)", 0, 1)
-            self.cell(0, 6, f"- Dimensions: {tank['dimensions']}", 0, 1)
-            self.ln(5)
-        
-        if 'recharge_system' in design_data['design']:
-            recharge = design_data['design']['recharge_system']
-            self.set_font('Helvetica', 'B', 11)
-            self.cell(0, 8, "Recharge System:", 0, 1)
-            self.set_font('Helvetica', '', 10)
-            self.cell(0, 6, f"- Configuration: {recharge['configuration']}", 0, 1)
-            self.cell(0, 6, f"- Capacity: {recharge['volume_m3']:.1f} m3", 0, 1)
-            self.cell(0, 6, f"- Dimensions: {recharge['dimensions']}", 0, 1)
-            self.cell(0, 6, f"- Total Footprint: {recharge['total_area']}", 0, 1)
-            self.ln(10)
-
-    def add_cost_analysis(self, financial_data):
-        self.chapter_title("FINANCIAL ANALYSIS & ROI")
-        
-        # Investment Summary Box
-        self.set_fill_color(255, 243, 224)  # Light yellow
-        self.set_draw_color(241, 196, 15)  # Yellow border
-        self.set_line_width(0.5)
-        self.rect(10, self.get_y(), 190, 25, 'FD')
-        
-        self.set_font('Helvetica', 'B', 12)
-        self.set_text_color(241, 196, 15)
-        self.set_y(self.get_y() + 5)
-        self.cell(0, 5, f"TOTAL INVESTMENT: Rs {financial_data['total_cost']:,.0f}", 0, 1, 'C')
-        
-        self.set_font('Helvetica', '', 10)
-        self.set_text_color(0, 0, 0)
-        payback = financial_data['payback_period_years']
-        if payback != float('inf'):
-            self.cell(0, 5, f"Payback Period: {payback:.1f} years | Annual Savings: Rs {financial_data['annual_savings']:,.0f}", 0, 1, 'C')
-        else:
-            self.cell(0, 5, f"Annual Savings: Rs {financial_data['annual_savings']:,.0f}", 0, 1, 'C')
-        self.ln(10)
-        
-        # Cost breakdown table with better styling
-        self.set_font('Helvetica', 'B', 11)
-        self.cell(0, 8, "Cost Breakdown", 0, 1)
-        self.ln(3)
-        
-        # Table header
-        self.set_fill_color(236, 240, 241)
-        self.set_font('Helvetica', 'B', 10)
-        self.cell(120, 8, "Component", 1, 0, 'L', fill=True)
-        self.cell(60, 8, "Cost (Rs)", 1, 1, 'R', fill=True)
-        
-        # Table rows
-        self.set_font('Helvetica', '', 9)
-        fill = False
-        for component, cost in financial_data['cost_breakdown'].items():
-            if fill:
-                self.set_fill_color(248, 249, 249)
-            else:
-                self.set_fill_color(255, 255, 255)
-            
-            display_name = component.replace('_', ' ').title()
-            self.cell(120, 6, f"  {display_name}", 1, 0, 'L', fill=fill)
-            self.cell(60, 6, f"{cost:,.0f}  ", 1, 1, 'R', fill=fill)
-            fill = not fill
-        
-        # Total row
-        self.set_fill_color(44, 62, 80)
-        self.set_text_color(255, 255, 255)
-        self.set_font('Helvetica', 'B', 10)
-        self.cell(120, 8, "  TOTAL SYSTEM COST", 1, 0, 'L', fill=True)
-        self.cell(60, 8, f"{financial_data['total_cost']:,.0f}  ", 1, 1, 'R', fill=True)
-        self.set_text_color(0, 0, 0)
-        
-        self.ln(10)
-        
-        # ROI Analysis
-        if financial_data['annual_savings'] > 0:
-            self.add_info_box(
-                "Return on Investment Analysis",
-                f"Annual Water Cost Savings: Rs {financial_data['annual_savings']:,.0f}\n"
-                f"Annual Maintenance Cost: Rs {financial_data['maintenance_cost_annual']:,.0f}\n"
-                f"Net Annual Benefit: Rs {financial_data['annual_savings'] - financial_data['maintenance_cost_annual']:,.0f}",
-                color=(46, 204, 113)
-            )
-
-# #############################################################################
-# ##### CORRECTED PDF GENERATION FUNCTION STARTS HERE #####
-# #############################################################################
-
-def generate_pdf_report(params, recommendation, design_financial, site_data, charts: Optional[Dict[str, plt.Figure]] = None):
-    """
-    Generate comprehensive PDF report without writing temporary files.
-    This version is robust for Streamlit Cloud deployment.
-    """
-    pdf = HydroAssessPDF()
-    pdf.add_page()
+#     # Add all text-based sections (your existing code for this is fine)
+#     pdf.add_recommendation_section(recommendation)
+#     pdf.add_design_section(design_financial)
+#     pdf.add_cost_analysis(design_financial)
     
-    # Add all text-based sections (your existing code for this is fine)
-    pdf.add_recommendation_section(recommendation)
-    pdf.add_design_section(design_financial)
-    pdf.add_cost_analysis(design_financial)
+#     # Site data section
+#     pdf.chapter_title(T('results_site_characteristics').upper())
+#     pdf.set_font('Helvetica', 'B', 11)
+#     pdf.cell(0, 8, T('results_location_data'), 0, 1, 'L')
+#     pdf.ln(3)
+#     site_info_left = [
+#         (T('results_coordinates').replace(':', ''), f"{params['latitude']:.4f}°N, {params['longitude']:.4f}°E"),
+#         (T('results_catchment_area_label').replace(':', ''), f"{params['area']:,.0f} m²"),
+#         (T('results_surface_type_label').replace(':', ''), params['surface_type']),
+#         (T('results_runoff_coefficient_label').replace(':', ''), f"{params['runoff_coefficient']:.2f}"),
+#         (T('results_city_classification_label').replace(':', ''), params['city_type']),
+#     ]
+#     site_info_right = [
+#         (T('results_annual_rainfall_label').replace(':', ''), f"{params['annual_rainfall']:.0f} mm"),
+#         (T('results_soil_classification').replace(':', ''), site_data['soil_type']),
+#         (T('results_groundwater_post').replace(':', ''), f"{site_data['post_monsoon_depth_m']:.1f} m bgl"),
+#         (T('results_aquifer_type').replace(':', ''), site_data['principal_aquifer_type']),
+#         (T('results_household_size_label').replace(':', ''), f"{params['household_size']} persons")
+#     ]
+#     y_start = pdf.get_y()
+#     pdf.set_font('Helvetica', '', 9)
+#     for i, (label, value) in enumerate(site_info_left):
+#         pdf.set_xy(10, y_start + i * 7)
+#         pdf.set_font('Helvetica', 'B', 9)
+#         pdf.cell(45, 6, label + ":", 0, 0, 'L')
+#         pdf.set_font('Helvetica', '', 9)
+#         pdf.cell(45, 6, str(value), 0, 1, 'L')
+#     for i, (label, value) in enumerate(site_info_right):
+#         pdf.set_xy(105, y_start + i * 7)
+#         pdf.set_font('Helvetica', 'B', 9)
+#         pdf.cell(45, 6, label + ":", 0, 0, 'L')
+#         pdf.set_font('Helvetica', '', 9)
+#         pdf.cell(45, 6, str(value), 0, 1, 'L')
+#     pdf.set_y(y_start + max(len(site_info_left), len(site_info_right)) * 7)
+#     pdf.ln(10)
     
-    # Site data section
-    pdf.chapter_title("SITE CHARACTERISTICS & GEO-HYDROLOGY")
-    pdf.set_font('Helvetica', 'B', 11)
-    pdf.cell(0, 8, "Site Location & Physical Parameters", 0, 1)
-    pdf.ln(3)
-    site_info_left = [
-        ("Location Coordinates", f"{params['latitude']:.4f}°N, {params['longitude']:.4f}°E"),
-        ("Catchment Area", f"{params['area']:,.0f} m²"),
-        ("Surface Type", params['surface_type']),
-        ("Runoff Coefficient", f"{params['runoff_coefficient']:.2f}"),
-        ("City Classification", params['city_type']),
-    ]
-    site_info_right = [
-        ("Annual Rainfall (2023)", f"{params['annual_rainfall']:.0f} mm"),
-        ("Soil Type", site_data['soil_type']),
-        ("GW Depth (Post-monsoon)", f"{site_data['post_monsoon_depth_m']:.1f} m bgl"),
-        ("Principal Aquifer", site_data['principal_aquifer_type']),
-        ("Household Size", f"{params['household_size']} persons")
-    ]
-    y_start = pdf.get_y()
-    pdf.set_font('Helvetica', '', 9)
-    for i, (label, value) in enumerate(site_info_left):
-        pdf.set_xy(10, y_start + i * 7)
-        pdf.set_font('Helvetica', 'B', 9)
-        pdf.cell(45, 6, label + ":", 0, 0)
-        pdf.set_font('Helvetica', '', 9)
-        pdf.cell(45, 6, str(value), 0, 0)
-    for i, (label, value) in enumerate(site_info_right):
-        pdf.set_xy(105, y_start + i * 7)
-        pdf.set_font('Helvetica', 'B', 9)
-        pdf.cell(45, 6, label + ":", 0, 0)
-        pdf.set_font('Helvetica', '', 9)
-        pdf.cell(45, 6, str(value), 0, 0)
-    pdf.set_y(y_start + max(len(site_info_left), len(site_info_right)) * 7)
-    pdf.ln(10)
-    
-    # Add implementation guidelines & other sections
-    pdf.add_page()
-    pdf.chapter_title("IMPLEMENTATION & MAINTENANCE")
-    # (Your existing code for these sections would go here)
-    pdf.set_font('Helvetica', '', 10)
-    pdf.multi_cell(0, 5, "Placeholder for implementation guidelines and maintenance schedules...")
-    pdf.ln(10)
+#     # Add implementation guidelines & other sections
+#     pdf.add_page()
+#     pdf.chapter_title("IMPLEMENTATION & MAINTENANCE")
+#     # (Your existing code for these sections would go here)
+#     pdf.set_font('Helvetica', '', 10)
+#     pdf.multi_cell(0, 5, "Placeholder for implementation guidelines and maintenance schedules...")
+#     pdf.ln(10)
 
-    # --- FIX: HANDLE CHARTS IN MEMORY TO AVOID FILE I/O ---
-    if charts:
-        pdf.add_page()
-        pdf.chapter_title("HYDROLOGICAL & FINANCIAL ANALYTICS")
+#     # --- FIX: HANDLE CHARTS IN MEMORY TO AVOID FILE I/O ---
+#     if charts:
+#         pdf.add_page()
+#         pdf.chapter_title("HYDROLOGICAL & FINANCIAL ANALYTICS")
 
-        # Process rainfall chart in memory
-        if charts.get('rainfall_chart') is not None:
-            with io.BytesIO() as buf:
-                charts['rainfall_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
-                buf.seek(0)
-                # Pass the buffer directly using the 'name' parameter
-                pdf.image(name=buf, x=10, w=190, type='PNG')
-            pdf.ln(5)
+#         # Process rainfall chart in memory
+#         if charts.get('rainfall_chart') is not None:
+#             with io.BytesIO() as buf:
+#                 charts['rainfall_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
+#                 buf.seek(0)
+#                 # Pass the buffer directly using the 'name' parameter
+#                 pdf.image(name=buf, x=10, w=190)
+#             pdf.ln(5)
 
-        # Process cost chart in memory
-        if charts.get('cost_chart') is not None:
-            with io.BytesIO() as buf:
-                charts['cost_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
-                buf.seek(0)
-                pdf.image(name=buf, x=10, w=95, type='PNG')
+#         # Process cost chart in memory
+#         if charts.get('cost_chart') is not None:
+#             with io.BytesIO() as buf:
+#                 charts['cost_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
+#                 buf.seek(0)
+#                 pdf.image(name=buf, x=10, w=95)
         
-        # Process savings chart in memory
-        if charts.get('savings_chart') is not None:
-            with io.BytesIO() as buf:
-                charts['savings_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
-                buf.seek(0)
-                pdf.image(name=buf, x=110, w=95, type='PNG')
+#         # Process savings chart in memory
+#         if charts.get('savings_chart') is not None:
+#             with io.BytesIO() as buf:
+#                 charts['savings_chart'].savefig(buf, format='PNG', dpi=120, bbox_inches='tight')
+#                 buf.seek(0)
+#                 pdf.image(name=buf, x=110, w=95)
 
-    # --- FIX: SIMPLIFY AND ROBUSTLY OUTPUT PDF BYTES ---
-    # Assuming `fpdf2` is in requirements.txt, this is the correct way.
-    try:
-    # Explicitly convert the bytearray to bytes
-        return bytes(pdf.output())
-    except Exception as e:
-        st.error(f"Failed during the final PDF output stage: {e}")
-        return b"" # Return empty bytes to prevent downstream errors
-        
-# #############################################################################
-# ##### CORRECTED PDF GENERATION FUNCTION ENDS HERE #####
-# #############################################################################
+#     # --- FIX: SIMPLIFY AND ROBUSTLY OUTPUT PDF BYTES ---
+#     # Assuming `fpdf2` is in requirements.txt, this is the correct way.
+#     try:
+#     # Explicitly convert the bytearray to bytes
+#         return bytes(pdf.output())
+#     except Exception as e:
+#         st.error(f"Failed during the final PDF output stage: {e}")
+#         return b"" # Return empty bytes to prevent downstream errors
+# """
+# # End of old FPDF code - now using ReportLab in pdf_generator.py
 
 
 # --- STREAMLIT UI ---
@@ -1409,12 +1232,12 @@ def show_onboarding():
         # Only ask for missing information
         col1, col2 = st.columns(2)
         with col1:
-            household_size = st.number_input("👪 Household Size (persons)", min_value=1, max_value=15, value=4, step=1)
+            household_size = st.number_input(f"👪 {T('calc_household_size')}", min_value=1, max_value=15, value=4, step=1)
         with col2:
-            water_cost_per_m3 = st.number_input("💧 Water Cost (₹ per m³)", min_value=10.0, value=25.0, step=1.0)
+            water_cost_per_m3 = st.number_input(f"💧 {T('calc_water_cost')}", min_value=10.0, value=25.0, step=1.0)
         
-        city_type = st.selectbox("🏙️ City Classification", 
-                               ["Tier 2 & 3 (Lower Density)", "Tier 1 (Metro - High Density)"])
+        city_type = st.selectbox(f"🏙️ {T('calc_city_classification')}", 
+                               [T('calc_city_tier2'), T('calc_city_tier1')])
         
         if st.button("✅ Complete Setup", type="primary", use_container_width=True):
             # Save the additional information
@@ -1511,20 +1334,20 @@ def show_onboarding():
         st.markdown("#### 📐 Step 2: Area & Surface Details")
         col1, col2 = st.columns(2)
         with col1:
-            area = st.number_input("Total Catchment Area (m²)", min_value=1.0, value=150.0, step=10.0)
+            area = st.number_input(T('calc_catchment_area'), min_value=1.0, value=150.0, step=10.0)
         with col2:
-            surface_type = st.selectbox("Primary Surface Type", list(RUNOFF_COEFFICIENTS.keys()))
+            surface_type = st.selectbox(T('calc_surface_type'), list(RUNOFF_COEFFICIENTS.keys()))
         
         # Step 3: Household Details
         st.markdown("#### 🏠 Step 3: Household Information")
         col1, col2 = st.columns(2)
         with col1:
-            household_size = st.number_input("👪 Household Size (persons)", min_value=1, max_value=15, value=4, step=1)
+            household_size = st.number_input(f"👪 {T('calc_household_size')}", min_value=1, max_value=15, value=4, step=1)
         with col2:
-            city_type = st.selectbox("🏙️ City Classification", 
-                                   ["Tier 2 & 3 (Lower Density)", "Tier 1 (Metro - High Density)"])
+            city_type = st.selectbox(f"🏙️ {T('calc_city_classification')}", 
+                                   [T('calc_city_tier2'), T('calc_city_tier1')])
         
-        water_cost_per_m3 = st.number_input("💧 Water Cost (₹ per m³)", min_value=10.0, value=25.0, step=1.0)
+        water_cost_per_m3 = st.number_input(f"💧 {T('calc_water_cost')}", min_value=10.0, value=25.0, step=1.0)
         
         # Complete setup button
         st.markdown("---")
@@ -1605,7 +1428,7 @@ def show_location_update_prompt():
             st.rerun()
 
 def main():
-    st.title("💧 Hydro-Assess | Intelligent Recommendation Engine")
+    st.title(f"💧 {T('app_name')} | {T('calc_title_suffix')}")
     
     # Initialize session state for onboarding
     if 'calc_onboarding_complete' not in st.session_state:
@@ -1648,45 +1471,45 @@ def main():
         return
     
     # Main dashboard after onboarding
-    st.markdown("### Dynamic What-If Analysis • Single-Page Dashboard")
+    st.markdown(f"### {T('calc_dashboard_title')}")
     
     # Sidebar: Master Controls (simplified after onboarding)
-    st.sidebar.header("📍 Site & System Parameters")
-    latitude = st.sidebar.number_input("Latitude", value=st.session_state.get('latitude', 28.9845), format="%.6f")
-    longitude = st.sidebar.number_input("Longitude", value=st.session_state.get('longitude', 77.7064), format="%.6f")
+    st.sidebar.header(f"📍 {T('calc_site_parameters')}")
+    latitude = st.sidebar.number_input(T('calc_latitude'), value=st.session_state.get('latitude', 28.9845), format="%.6f")
+    longitude = st.sidebar.number_input(T('calc_longitude'), value=st.session_state.get('longitude', 77.7064), format="%.6f")
     # Ensure area value is not less than min_value to avoid Streamlit error
     current_area = st.session_state.get('area', 150.0)
     area_value = max(1.0, current_area)  # Ensure minimum value
-    area = st.sidebar.number_input("Total Catchment Area (m²)", min_value=1.0, value=area_value, step=1.0)
+    area = st.sidebar.number_input(T('calc_catchment_area'), min_value=1.0, value=area_value, step=1.0)
     
-    surface_type = st.sidebar.selectbox("Primary Surface Type", list(RUNOFF_COEFFICIENTS.keys()), 
+    surface_type = st.sidebar.selectbox(T('calc_surface_type'), list(RUNOFF_COEFFICIENTS.keys()), 
                                        index=list(RUNOFF_COEFFICIENTS.keys()).index(st.session_state.get('surface_type', 'Concrete Roof')))
     runoff_coefficient = RUNOFF_COEFFICIENTS[surface_type]
     
     st.sidebar.markdown("---")
-    st.sidebar.header("👪 Household & City")
-    household_size = st.sidebar.slider("Household Size (persons)", 1, 15, st.session_state.get('household_size', 4))
-    city_type = st.sidebar.selectbox("City Classification", 
-                                   ["Tier 2 & 3 (Lower Density)", "Tier 1 (Metro - High Density)"],
-                                   index=0 if st.session_state.get('city_type', 'Tier 2 & 3 (Lower Density)') == 'Tier 2 & 3 (Lower Density)' else 1)
-    water_cost_per_m3 = st.sidebar.number_input("Water Cost (₹ per m³)", min_value=10.0, 
+    st.sidebar.header(f"👪 {T('calc_household_city')}")
+    household_size = st.sidebar.slider(T('calc_household_size'), 1, 15, st.session_state.get('household_size', 4))
+    city_type = st.sidebar.selectbox(T('calc_city_classification'), 
+                                   [T('calc_city_tier2'), T('calc_city_tier1')],
+                                   index=0 if st.session_state.get('city_type', T('calc_city_tier2')) == T('calc_city_tier2') else 1)
+    water_cost_per_m3 = st.sidebar.number_input(T('calc_water_cost'), min_value=10.0, 
                                                value=st.session_state.get('water_cost_per_m3', 25.0), step=1.0)
     
     # Reset onboarding button
-    if st.sidebar.button("🔄 Reset Setup", help="Go back to initial setup"):
+    if st.sidebar.button(T('calc_reset_setup'), help=T('calc_reset_help')):
         st.session_state['calc_onboarding_complete'] = False
         st.session_state['came_from_map'] = False
         st.rerun()
     
     st.sidebar.markdown("---")
-    st.sidebar.header("🛰️ Data Enhancements")
+    st.sidebar.header(T('calc_data_enhancements'))
     
     # Chart theme selector
     chart_theme = st.sidebar.selectbox(
-        "📊 Chart Theme",
+        T('calc_chart_theme'),
         ["Auto (Match Streamlit)", "Light Mode", "Dark Mode"],
         index=0,
-        help="Choose how charts should be styled"
+        help=T('calc_chart_theme_help')
     )
     st.session_state.chart_theme = chart_theme
     
@@ -1707,7 +1530,7 @@ def main():
                 st.rerun()
             use_gps = False
         else:
-            use_gps = st.sidebar.checkbox("Use GPS (if available)", value=False, key="use_gps_checkbox")
+            use_gps = st.sidebar.checkbox(T('calc_use_gps'), value=False, key="use_gps_checkbox")
         
         if use_gps and loc and loc.get('latitude') is not None and loc.get('longitude') is not None:
             # Only update if not using map coordinates
@@ -1718,7 +1541,7 @@ def main():
     except Exception:
         st.sidebar.caption("Install 'streamlit-geolocation' to enable GPS.")
     
-    uploaded_file = st.sidebar.file_uploader("Upload Groundwater GeoJSON (optional)", type=['geojson'])
+    uploaded_file = st.sidebar.file_uploader(T('calc_upload_geojson'), type=['geojson'])
     if uploaded_file:
         try:
             gdf = gpd.read_file(uploaded_file)
@@ -1766,8 +1589,8 @@ def main():
         st.sidebar.info(f"📍 Using coordinates: {current_lat:.4f}°N, {current_lon:.4f}°E")
     
     # Show API status
-    with st.sidebar.expander("🔍 API Status", expanded=False):
-        st.write("**Data Sources:**")
+    with st.sidebar.expander(T('calc_api_status'), expanded=False):
+        st.write(f"**{T('calc_data_sources')}**")
         st.write("• Rainfall: Open-Meteo API")
         st.write("• Soil: ISRIC SoilGrids API")
         st.write("• Coordinates: " + ("Map Selection" if st.session_state.get('coordinates_from_map', False) else "GPS/Manual"))
@@ -1781,9 +1604,9 @@ def main():
     soil_type = get_soil_type(current_lat, current_lon)
     
     # Display soil type result with proper API status tracking
-    with st.sidebar.expander("🌱 Detected Soil Type", expanded=False):
-        st.write(f"**Soil Type:** {soil_type}")
-        st.write(f"**Infiltration Rate:** {SOIL_INFILTRATION_RATES.get(soil_type, 13)} mm/hour")
+    with st.sidebar.expander(T('calc_detected_soil'), expanded=False):
+        st.write(f"**{T('calc_soil_type')}** {soil_type}")
+        st.write(f"**{T('calc_infiltration_rate')}** {SOIL_INFILTRATION_RATES.get(soil_type, 13)} mm/hour")
         
         # Show the actual source of the soil data
         with st.spinner("Checking soil data source..."):
@@ -1822,6 +1645,10 @@ def main():
     
     recommendation = generate_recommendation(params)
     design_financial = calculate_design_and_cost(recommendation, params)
+
+    # Calculate and store household coverage percentage for PDF generation
+    household_coverage_pct = (recommendation['annual_potential'] / (params['household_size'] * 135 * 365)) * 100
+    recommendation['household_coverage_percent'] = min(household_coverage_pct, 100)  # Cap at 100%
     
     # Simplified theme detection for charts
     def get_streamlit_theme_colors():
@@ -1971,7 +1798,7 @@ def main():
         wedges, texts, autotexts = ax_cost.pie(
             values, 
             labels=labels, 
-            autopct=lambda pct: f'{pct:.1f}%\n(₹{pct/100 * sum(values)/1000:.0f}K)' if pct > 5 else f'{pct:.1f}%',
+            autopct=lambda pct: f'{pct:.1f}%' if pct <= 5 else f'{pct:.1f}%\n(₹{pct/100 * sum(values)/1000:.0f}K)',
             colors=colors, 
             startangle=90,
             explode=[0.05 if v == max(values) else 0 for v in values],  # Explode the largest slice
@@ -2085,23 +1912,45 @@ def main():
     st.session_state.fig_save = fig_save
     
     # Header recommendation and KPIs
+    # Translate recommendation type
+    rec_type = recommendation['recommendation_type']
+    if rec_type == 'Storage Only':
+        rec_type_translated = T('results_storage_only')
+    elif rec_type == 'Recharge Only':
+        rec_type_translated = T('results_recharge_only')
+    elif rec_type == 'Hybrid System':
+        rec_type_translated = T('results_hybrid_system')
+    else:
+        rec_type_translated = rec_type
+    
+    # Translate efficiency rating
+    efficiency = recommendation['efficiency_rating']
+    if efficiency == 'Excellent':
+        efficiency_translated = T('results_efficiency_excellent')
+    elif efficiency == 'Good':
+        efficiency_translated = T('results_efficiency_good')
+    elif efficiency == 'Moderate':
+        efficiency_translated = T('results_efficiency_moderate')
+    else:
+        efficiency_translated = efficiency
+    
     st.markdown(f"""
     <div class="recommendation-box">
-        <h2>Recommended Strategy: <strong>{recommendation['recommendation_type']}</strong></h2>
-        <p style="font-size: 18px; margin-top: 10px;">System Efficiency: <strong>{recommendation['efficiency_rating']}</strong></p>
+        <h2>{T('results_recommended_strategy')} <strong>{rec_type_translated}</strong></h2>
+        <p style="font-size: 18px; margin-top: 10px;">{T('results_system_efficiency')} <strong>{efficiency_translated}</strong></p>
     </div>
     """, unsafe_allow_html=True)
     st.markdown(f"""
     <div class="reason-box">
-        <strong>Strategic Rationale:</strong> {recommendation['reason']}
+        <strong>{T('results_strategic_rationale')}</strong> {recommendation['reason']}
     </div>
     """, unsafe_allow_html=True)
     
-    st.subheader("Key Performance Metrics")
+    st.subheader(T('results_key_metrics'))
     
     # Debug: Ensure recommendation data exists
     if not recommendation:
-        st.error("No recommendation data available. Please check the assessment.")
+        st.error(T('results_no_recommendation_data'))
         return
     
     # Create metrics with enhanced styling and error handling
@@ -2114,23 +1963,23 @@ def main():
     
     with k1:
         st.metric(
-            label="Annual Harvest Potential", 
+            label=T('results_annual_harvest'), 
             value=f"{annual_potential:,.0f} L",
-            help="Total rainwater that can be harvested annually from your catchment area"
+            help=T('results_help_harvest')
         )
     
     with k2:
         st.metric(
-            label="Storage Allocation", 
+            label=T('results_storage_allocation'), 
             value=f"{volume_to_store:,.0f} L",
-            help="Water allocated for direct household use and storage"
+            help=T('results_help_storage')
         )
     
     with k3:
         st.metric(
-            label="Recharge Allocation", 
+            label=T('results_recharge_allocation'), 
             value=f"{volume_to_recharge:,.0f} L",
-            help="Water allocated for groundwater recharge"
+            help=T('results_help_recharge')
         )
     
     with k4:
@@ -2139,21 +1988,21 @@ def main():
             coverage_pct = (annual_potential / annual_demand) * 100 if annual_demand > 0 else 0
             coverage_display = f"{min(coverage_pct, 100):.1f}%"
             st.metric(
-                label="Household Demand Coverage", 
+                label=T('results_household_coverage'), 
                 value=coverage_display,
-                help="Percentage of annual household water demand that can be met"
+                help=T('results_help_coverage')
             )
         except (KeyError, ZeroDivisionError, TypeError) as e:
             st.metric(
-                label="Household Demand Coverage", 
+                label=T('results_household_coverage'), 
                 value="N/A",
-                help="Unable to calculate coverage percentage"
+                help=T('results_help_coverage')
             )
     
     st.markdown("---")
     
     # Output Tabs
-    t1, t2, t3, t4, t5 = st.tabs(["🏗️ Recommended System Design", "💰 Financials & ROI", "🌍 Site Data", "🌧️ Rainfall Analytics", "📋 Summary Report"])
+    t1, t2, t3, t4, t5 = st.tabs([T('results_recommended_design'), T('results_financials'), T('results_site_data'), T('results_rainfall'), T('results_summary')])
     
     with t1:
         show_system_design_tab(design_financial)
@@ -2166,13 +2015,13 @@ def main():
         st.info(st.session_state.get('data_source_message', 'Using simulated data'))
     
     with t4:
-        st.header("Hydrological Analysis")
+        st.header(T('results_hydro_analysis'))
         st.pyplot(fig_rain)
         col_a, col_b = st.columns(2)
         with col_a:
-            st.subheader("Rainfall Statistics")
+            st.subheader(T('results_rainfall_statistics'))
             rainfall_df = pd.DataFrame({
-                'Metric': ['Total Annual', 'Monthly Average', 'Max Month', 'Min Month'],
+                'Metric': [T('results_total_annual'), T('results_monthly_average'), T('results_max_month'), T('results_min_month')],
                 'Value': [
                     f"{sum(monthly_rainfall.values()):.0f} mm",
                     f"{sum(monthly_rainfall.values())/12:.0f} mm",
@@ -2182,9 +2031,9 @@ def main():
             })
             st.dataframe(rainfall_df, hide_index=True, use_container_width=True)
         with col_b:
-            st.subheader("Harvesting Metrics")
+            st.subheader(T('results_harvesting_metrics'))
             harvest_df = pd.DataFrame({
-                'Parameter': ['Runoff Coefficient', 'Collection Efficiency'],
+                'Parameter': [T('results_runoff_coeff_param'), T('results_collection_efficiency')],
                 'Value': [f"{params['runoff_coefficient']:.2f}", f"{params['runoff_coefficient']*100:.0f}%"]
             })
             st.dataframe(harvest_df, hide_index=True, use_container_width=True)
@@ -2193,30 +2042,30 @@ def main():
         show_summary_report_tab(params, recommendation, design_financial, soil_type)
 
 def show_site_selection():
-    st.header("📍 Site Selection & Configuration")
+    st.header(T('calc_site_parameters'))
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Property Location")
-        latitude = st.number_input("Latitude", value=st.session_state.latitude, format="%.6f", help="Enter your property's latitude")
-        longitude = st.number_input("Longitude", value=st.session_state.longitude, format="%.6f", help="Enter your property's longitude")
+        st.subheader(T('calc_site_parameters'))
+        latitude = st.number_input(T('calc_latitude'), value=st.session_state.latitude, format="%.6f", help=T('calc_latitude'))
+        longitude = st.number_input(T('calc_longitude'), value=st.session_state.longitude, format="%.6f", help=T('calc_longitude'))
         
-        st.subheader("Catchment Configuration")
+        st.subheader(T('calc_data_enhancements'))
         # Ensure area value is valid to avoid Streamlit error
         area_value = max(1.0, st.session_state.get('area', 150.0))
-        area = st.number_input("Total Catchment Area (m²)", min_value=1.0, value=area_value, step=10.0, help="Total roof and surface area for water collection")
+        area = st.number_input(T('calc_catchment_area'), min_value=1.0, value=area_value, step=10.0, help=T('calc_catchment_area'))
     
     with col2:
-        st.subheader("Surface Parameters")
-        surface_type = st.selectbox("Primary Surface Type", list(RUNOFF_COEFFICIENTS.keys()))
+        st.subheader(T('calc_data_enhancements'))
+        surface_type = st.selectbox(T('calc_surface_type'), list(RUNOFF_COEFFICIENTS.keys()))
         runoff_coefficient = RUNOFF_COEFFICIENTS[surface_type]
         st.info(f"**Runoff Coefficient:** {runoff_coefficient}")
         
-        st.subheader("Household Configuration")
-        household_size = st.slider("Household Size (persons)", 1, 15, 4)
-        city_type = st.selectbox("City Classification", ["Tier 2 & 3 (Lower Density)", "Tier 1 (Metro - High Density)"])
-        water_cost_per_m3 = st.number_input("Water Cost (₹ per m³)", min_value=10.0, value=25.0, step=1.0)
+        st.subheader(T('calc_household_city'))
+        household_size = st.slider(T('calc_household_size'), 1, 15, 4)
+        city_type = st.selectbox(T('calc_city_classification'), [T('calc_city_tier2'), T('calc_city_tier1')])
+        water_cost_per_m3 = st.number_input(T('calc_water_cost'), min_value=10.0, value=25.0, step=1.0)
         
     # Optional: Use device GPS (if streamlit_geolocation available)
     with st.expander("📍 Use Device GPS (Optional)"):
@@ -2490,11 +2339,11 @@ def run_complete_assessment():
     st.balloons()
 
 def show_results_and_report():
-    st.header("Results & Comprehensive Report")
+    st.header(T('results_comprehensive_report'))
     
     # Check if assessment has been run
     if 'recommendation_result' not in st.session_state:
-        st.warning("Please run the assessment first in the 'Assessment Engine' tab.")
+        st.warning(T('results_run_assessment_first'))
         return
     
     # Get results from session state
@@ -2506,54 +2355,54 @@ def show_results_and_report():
     # Display main recommendation prominently
     st.markdown(f"""
     <div class="recommendation-box">
-        <h2>Recommended Strategy: <strong>{recommendation['recommendation_type']}</strong></h2>
-        <p style="font-size: 18px; margin-top: 10px;">System Efficiency: <strong>{recommendation['efficiency_rating']}</strong></p>
+        <h2>{T('results_recommended_strategy')} <strong>{recommendation['recommendation_type']}</strong></h2>
+        <p style="font-size: 18px; margin-top: 10px;">{T('results_system_efficiency')} <strong>{recommendation['efficiency_rating']}</strong></p>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown(f"""
     <div class="reason-box">
-        <strong>Strategic Rationale:</strong> {recommendation['reason']}
+        <strong>{T('results_strategic_rationale')}</strong> {recommendation['reason']}
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Key performance metrics
-    st.subheader("Key Performance Metrics")
+    st.subheader(T('results_key_metrics'))
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric(
-            "Annual Harvest Potential",
+            T('results_annual_harvest'),
             f"{recommendation['annual_potential']:,.0f} L",
-            help="Total rainwater that can be harvested annually"
+            help=T('results_help_harvest')
         )
     
     with col2:
         st.metric(
-            "Storage Allocation",
+            T('results_storage_allocation'),
             f"{recommendation['volume_to_store']:,.0f} L",
-            help="Water allocated for direct household use"
+            help=T('results_help_storage')
         )
     
     with col3:
         st.metric(
-            "Recharge Allocation", 
+            T('results_recharge_allocation'), 
             f"{recommendation['volume_to_recharge']:,.0f} L",
-            help="Water allocated for groundwater recharge"
+            help=T('results_help_recharge')
         )
     
     with col4:
         coverage_pct = (recommendation['annual_potential'] / (params['household_size'] * 135 * 365)) * 100
         st.metric(
-            "Household Demand Coverage",
+            T('results_household_coverage'),
             f"{min(coverage_pct, 100):.1f}%",
-            help="Percentage of annual household water demand that can be met"
+            help=T('results_help_coverage')
         )
     
     # Detailed results in tabs
-    result_tab1, result_tab2, result_tab3, result_tab4, result_tab5 = st.tabs(["System Design", "Financial Analysis", "Site Data", "Rainfall Analytics", "Summary Report"])
+    result_tab1, result_tab2, result_tab3, result_tab4, result_tab5 = st.tabs([T('results_recommended_design').replace('🏗️ ', ''), T('results_financials').replace('💰 ', ''), T('results_site_data').replace('🌍 ', ''), T('results_rainfall').replace('🌧️ ', ''), T('results_summary').replace('📋 ', '')])
     
     with result_tab1:
         show_system_design_tab(design_financial)
@@ -2566,7 +2415,7 @@ def show_results_and_report():
     
     with result_tab4:
         # Rainfall analytics
-        st.header("Hydrological Analysis")
+        st.header(T('results_hydro_analysis'))
         monthly = st.session_state.get('monthly_rainfall', None)
         if monthly:
             fig = st.session_state.get('fig_rain')
@@ -2574,35 +2423,34 @@ def show_results_and_report():
                 st.pyplot(fig)
             col_a, col_b = st.columns([1, 1])
             with col_a:
-                st.subheader("Rainfall Statistics")
+                st.subheader(T('results_rainfall_statistics'))
                 rainfall_df = pd.DataFrame({
-                    'Metric': ['Total Annual', 'Monthly Average', 'Max Month', 'Min Month'],
+                    'Metric': [T('results_total_annual'), T('results_monthly_average'), T('results_max_month'), T('results_min_month')],
                     'Value': [
                         f"{sum(monthly.values()):.0f} mm",
                         f"{sum(monthly.values())/12:.0f} mm",
                         f"{max(monthly.values()):.0f} mm ({max(monthly, key=monthly.get)})",
-                        f"{min(monthly.values()):.0f} mm ({min(monthly, key=monthly.get)})"
-                    ]
+                        f"{min(monthly.values()):.0f} mm ({min(monthly, key=monthly.get)})"                    ]
                 })
                 st.dataframe(rainfall_df, hide_index=True, use_container_width=True)
             with col_b:
-                st.subheader("Harvesting Metrics")
+                st.subheader(T('results_harvesting_metrics'))
                 harvest_df = pd.DataFrame({
-                    'Parameter': ['Runoff Coefficient', 'Collection Efficiency'],
+                    'Parameter': [T('results_runoff_coeff_param'), T('results_collection_efficiency')],
                     'Value': [f"{params['runoff_coefficient']:.2f}", f"{params['runoff_coefficient']*100:.0f}%"]
                 })
                 st.dataframe(harvest_df, hide_index=True, use_container_width=True)
         else:
-            st.info("Monthly rainfall data unavailable.")
+            st.info(T('results_monthly_data_unavailable'))
     
     with result_tab5:
         show_summary_report_tab(params, recommendation, design_financial, soil_type)
 
 def show_system_design_tab(design_financial):
-    st.header("Recommended System Design")
+    st.header(T('results_recommended_design').replace('🏗️ ', ''))
     
     if not design_financial['design']:
-        st.info("No physical system components recommended based on the analysis.")
+        st.info(T('results_no_system_components'))
         return
     
     # Storage system
@@ -2610,12 +2458,12 @@ def show_system_design_tab(design_financial):
         tank = design_financial['design']['storage_tank']
         st.markdown(f"""
         <div class="design-card">
-            <h4>Storage System Specifications</h4>
+            <h4>{T('results_storage_specs')}</h4>
             <ul>
-                <li><strong>Tank Type:</strong> {tank['type']}</li>
-                <li><strong>Capacity:</strong> {tank['volume_liters']:,.0f} liters ({tank['volume_m3']:.1f} m³)</li>
-                <li><strong>Recommended Dimensions:</strong> {tank['dimensions']}</li>
-                <li><strong>Installation:</strong> Underground/Above-ground based on site conditions</li>
+                <li><strong>{T('results_tank_type')}</strong> {tank['type']}</li>
+                <li><strong>{T('results_capacity')}</strong> {tank['volume_liters']:,.0f} liters ({tank['volume_m3']:.1f} m³)</li>
+                <li><strong>{T('results_dimensions')}</strong> {tank['dimensions']}</li>
+                <li><strong>{T('results_installation')}</strong> {T('results_installation_underground')}</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -2625,42 +2473,42 @@ def show_system_design_tab(design_financial):
         recharge = design_financial['design']['recharge_system']
         st.markdown(f"""
         <div class="design-card">
-            <h4>Recharge System Specifications</h4>
+            <h4>{T('results_recharge_specs')}</h4>
             <ul>
-                <li><strong>Configuration:</strong> {recharge['configuration']}</li>
-                <li><strong>Total Capacity:</strong> {recharge['volume_m3']:.1f} m³</li>
-                <li><strong>Dimensions:</strong> {recharge['dimensions']}</li>
-                <li><strong>Total Footprint:</strong> {recharge['total_area']}</li>
-                <li><strong>Depth:</strong> Lined with filter media (sand, gravel)</li>
+                <li><strong>{T('results_configuration')}</strong> {recharge['configuration']}</li>
+                <li><strong>{T('results_total_capacity')}</strong> {recharge['volume_m3']:.1f} m³</li>
+                <li><strong>{T('results_dimensions')}</strong> {recharge['dimensions']}</li>
+                <li><strong>{T('results_footprint')}</strong> {recharge['total_area']}</li>
+                <li><strong>{T('results_depth')}</strong> {T('results_filter_media')}</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
     
     # Additional components
-    st.subheader("Supporting Infrastructure")
+    st.subheader(T('results_supporting_infra'))
     
     # Create a styled list for better visibility
-    components_html = """
+    components_html = f"""
     <div style="background: var(--bg-secondary); border-radius: 12px; padding: 20px; margin: 15px 0; border: 1px solid var(--border-color);">
         <ul style="margin: 0; padding-left: 20px; color: var(--text-primary);">
-            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">First flush diverter for water quality management</li>
-            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">Multi-stage filtration system (leaf screens, sand filters)</li>
-            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">Gutter system with appropriate sizing and slope</li>
-            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">Distribution piping with valves and controls</li>
-            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">Overflow management and safety systems</li>
+            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">{T('results_first_flush_diverter')}</li>
+            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">{T('results_multi_stage_filtration')}</li>
+            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">{T('results_gutter_system')}</li>
+            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">{T('results_distribution_piping')}</li>
+            <li style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">{T('results_overflow_management')}</li>
         </ul>
     </div>
     """
     st.markdown(components_html, unsafe_allow_html=True)
 
 def show_financial_analysis_tab(design_financial, recommendation):
-    st.header("Comprehensive Financial Analysis")
+    st.header(T('results_financial_header'))
     
     # Cost breakdown
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.subheader("System Cost Breakdown")
+        st.subheader(T('results_cost_breakdown'))
         
         # Create cost breakdown chart
         costs = design_financial['cost_breakdown']
@@ -2717,7 +2565,7 @@ def show_financial_analysis_tab(design_financial, recommendation):
             )
             
             # Enhanced title with better styling
-            ax.set_title("System Cost Distribution", fontsize=16, fontweight='bold', 
+            ax.set_title(T('results_cost_distribution'), fontsize=16, fontweight='bold', 
                         pad=20, color=title_color)
             
             # Improve text styling for dark mode compatibility
@@ -2753,16 +2601,16 @@ def show_financial_analysis_tab(design_financial, recommendation):
         # Cost summary table
         st.markdown(f"""
         <div class="cost-card">
-            <h4>Investment Summary</h4>
+            <h4>{T('results_investment_summary')}</h4>
             <table style="width:100%">
-                <tr><td><strong>Total System Cost:</strong></td><td><strong>₹ {design_financial['total_cost']:,.0f}</strong></td></tr>
-                <tr><td>Annual Maintenance:</td><td>₹ {design_financial['maintenance_cost_annual']:,.0f}</td></tr>
+                <tr><td><strong>{T('results_total_cost')}</strong></td><td><strong>₹ {design_financial['total_cost']:,.0f}</strong></td></tr>
+                <tr><td>{T('results_annual_maintenance')}</td><td>₹ {design_financial['maintenance_cost_annual']:,.0f}</td></tr>
             </table>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
-        st.subheader("Financial Benefits & Payback")
+        st.subheader(T('results_financial_benefits'))
         
         if design_financial['annual_savings'] > 0:
             # Create savings projection chart
@@ -2800,7 +2648,7 @@ def show_financial_analysis_tab(design_financial, recommendation):
             # Style axes and labels
             ax.set_xlabel('Years', fontsize=12, fontweight='bold', color=text_color)
             ax.set_ylabel('Amount (₹)', fontsize=12, fontweight='bold', color=text_color)
-            ax.set_title('10-Year Financial Projection', fontsize=14, fontweight='bold', 
+            ax.set_title(T('results_financial_projection'), fontsize=14, fontweight='bold', 
                         color=text_color, pad=20)
             
             # Style legend
@@ -2830,66 +2678,66 @@ def show_financial_analysis_tab(design_financial, recommendation):
             payback_years = design_financial['payback_period_years']
             payback_text = f"{payback_years:.1f} years" if payback_years != float('inf') else "N/A"
             
-            st.success(f"Annual Water Savings: ₹ {design_financial['annual_savings']:,.0f}")
-            st.success(f"Simple Payback Period: {payback_text}")
+            st.success(f"{T('results_annual_savings')} ₹ {design_financial['annual_savings']:,.0f}")
+            st.success(f"{T('results_payback_period')} {payback_text}")
             
             # ROI calculation
             if payback_years != float('inf'):
                 roi_10_year = ((cumulative_savings[-1] - design_financial['total_cost']) / design_financial['total_cost']) * 100
-                st.success(f"10-Year ROI: {roi_10_year:.1f}%")
+                st.success(f"{T('results_roi_10year')} {roi_10_year:.1f}%")
         else:
-            st.info("This system focuses on environmental benefits rather than direct cost savings.")
+            st.info(T('results_environmental_benefits_focus'))
     
     # Environmental benefits
-    st.subheader("Environmental Impact")
+    st.subheader(T('results_environmental_impact'))
     col1, col2, col3 = st.columns(3)
     
     with col1:
         annual_harvest_m3 = recommendation['annual_potential'] / 1000
-        st.metric("Water Independence", f"{annual_harvest_m3:,.0f} m³/year", 
-                 help="Annual freshwater demand reduction")
+        st.metric(T('results_water_independence'), f"{annual_harvest_m3:,.0f} m³/year", 
+                 help=T('results_annual_freshwater_demand'))
     
     with col2:
         if design_financial['groundwater_recharge_m3_annual'] > 0:
-            st.metric("Groundwater Recharge", f"{design_financial['groundwater_recharge_m3_annual']:,.0f} m³/year",
-                     help="Annual groundwater replenishment")
+            st.metric(T('results_groundwater_recharge'), f"{design_financial['groundwater_recharge_m3_annual']:,.0f} m³/year",
+                     help=T('results_annual_groundwater_replenishment'))
         else:
-            st.metric("Runoff Reduction", f"{annual_harvest_m3:,.0f} m³/year",
-                     help="Reduced stormwater runoff")
+            st.metric(T('results_runoff_reduction'), f"{annual_harvest_m3:,.0f} m³/year",
+                     help=T('results_reduced_stormwater_runoff'))
     
     with col3:
         co2_reduction = annual_harvest_m3 * 0.5  # Approximate CO2 savings
-        st.metric("CO₂ Footprint Reduction", f"{co2_reduction:.0f} kg/year",
-                 help="Estimated carbon footprint reduction")
+        st.metric(T('results_co2_reduction'), f"{co2_reduction:.0f} kg/year",
+                 help=T('results_carbon_footprint_reduction'))
 
 def show_site_data_tab(params, soil_type):
-    st.header("Site Characteristics & Geo-Hydrology")
+    st.header(T('results_site_characteristics'))
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Location Data")
+        st.subheader(T('results_location_data'))
         location_data = {
-            "Coordinates": f"{params['latitude']:.6f}°N, {params['longitude']:.6f}°E",
-            "Catchment Area": f"{params['area']:,.0f} m²",
-            "Surface Type": params['surface_type'],
-            "Runoff Coefficient": f"{params['runoff_coefficient']:.2f}",
-            "City Classification": params['city_type'],
-            "Household Size": f"{params['household_size']} persons"
+            T('results_coordinates'): f"{params['latitude']:.6f}°N, {params['longitude']:.6f}°E",
+            T('results_catchment_area_label'): f"{params['area']:,.0f} m²",
+            T('results_surface_type_label'): params['surface_type'],
+            T('results_runoff_coefficient_label'): f"{params['runoff_coefficient']:.2f}",
+            T('results_city_classification_label'): params['city_type'],
+            T('results_household_size_label'): f"{params['household_size']} persons"
         }
         
         for key, value in location_data.items():
             st.write(f"**{key}:** {value}")
     
     with col2:
-        st.subheader("Hydro-Geological Data")
+        st.subheader(T('results_hydro_data'))
         hydro_data = {
-            "Annual Rainfall (2023)": f"{params['annual_rainfall']:.0f} mm",
-            "Soil Classification": soil_type,
-            "Groundwater Depth (Post-monsoon)": f"{params['post_monsoon_depth_m']:.1f} m bgl",
-            "Groundwater Depth (Pre-monsoon)": f"{params['pre_monsoon_depth_m']:.1f} m bgl",
-            "Principal Aquifer Type": params['principal_aquifer_type'],
-            "Aquifer Yield": params.get('aquifer_yield', 'Moderate')
+            T('results_annual_rainfall_label'): f"{params['annual_rainfall']:.0f} mm",
+            T('results_soil_classification'): soil_type,
+            T('results_groundwater_post'): f"{params['post_monsoon_depth_m']:.1f} m bgl",
+            T('results_groundwater_pre'): f"{params['pre_monsoon_depth_m']:.1f} m bgl",
+            T('results_aquifer_type'): params['principal_aquifer_type'],
+            T('results_aquifer_yield'): params.get('aquifer_yield', 'Moderate')
         }
         
         for key, value in hydro_data.items():
@@ -2899,46 +2747,46 @@ def show_site_data_tab(params, soil_type):
     st.info(st.session_state.get('data_source_message', 'Using simulated data'))
     
     # Site suitability assessment
-    st.subheader("Site Suitability Assessment")
+    st.subheader(T('results_site_suitability'))
     
     suitability_factors = []
     
     # Rainfall assessment
     if params['annual_rainfall'] > 800:
-        suitability_factors.append("Excellent rainfall for harvesting systems")
+        suitability_factors.append(T('results_rainfall_excellent'))
     elif params['annual_rainfall'] > 500:
-        suitability_factors.append("Good rainfall supports both storage and recharge")
+        suitability_factors.append(T('results_rainfall_good'))
     else:
-        suitability_factors.append("Low rainfall limits recharge effectiveness")
+        suitability_factors.append(T('results_rainfall_low'))
     
     # Groundwater assessment
     if params['post_monsoon_depth_m'] > 15:
-        suitability_factors.append("Deep groundwater ideal for recharge systems")
+        suitability_factors.append(T('results_groundwater_deep'))
     elif params['post_monsoon_depth_m'] > 8:
-        suitability_factors.append("Moderate groundwater depth suitable for recharge")
+        suitability_factors.append(T('results_groundwater_moderate'))
     else:
-        suitability_factors.append("Shallow groundwater may limit recharge options")
+        suitability_factors.append(T('results_groundwater_shallow'))
     
     # Area assessment
     if params['area'] > 200:
-        suitability_factors.append("Large catchment area enables significant water harvesting")
+        suitability_factors.append(T('results_area_large'))
     elif params['area'] > 100:
-        suitability_factors.append("Good catchment area for household-scale systems")
+        suitability_factors.append(T('results_area_good'))
     else:
-        suitability_factors.append("Compact catchment suitable for focused applications")
+        suitability_factors.append(T('results_area_compact'))
     
     for factor in suitability_factors:
         st.markdown(f"• {factor}")
 
 def show_summary_report_tab(params, recommendation, design_financial, soil_type):
-    st.header("Executive Summary Report")
+    st.header(T('results_executive_summary'))
     
-    # Generate PDF report
+    # Generate PDF report with enhanced data validation
     site_data = {
-        'soil_type': soil_type,
-        'post_monsoon_depth_m': params['post_monsoon_depth_m'],
-        'principal_aquifer_type': params['principal_aquifer_type'],
-        'aquifer_yield': params.get('aquifer_yield', 'Moderate')
+        'soil_type': soil_type if soil_type and soil_type.strip() else 'Sandy',
+        'post_monsoon_depth_m': params.get('post_monsoon_depth_m', 12.0),
+        'principal_aquifer_type': params.get('principal_aquifer_type', 'Alluvial Plains') if params.get('principal_aquifer_type') and params.get('principal_aquifer_type').strip() else 'Alluvial Plains',
+        'aquifer_yield': params.get('aquifer_yield', 'Moderate') if params.get('aquifer_yield') and params.get('aquifer_yield').strip() else 'Moderate'
     }
     
     try:
@@ -2950,7 +2798,10 @@ def show_summary_report_tab(params, recommendation, design_financial, soil_type)
         
         # Generate PDF with better error handling
         with st.spinner('Generating comprehensive PDF report...'):
-            pdf_bytes = generate_pdf_report(params, recommendation, design_financial, site_data, charts)
+            # Add missing site data fields
+            site_data['pre_monsoon_depth_m'] = params.get('pre_monsoon_depth_m', params['post_monsoon_depth_m'] + 2.0)
+            pdf_buffer = generate_professional_pdf(params, recommendation, design_financial, site_data, charts)
+            pdf_bytes = pdf_buffer.getvalue()
             
         # Validate PDF bytes
         if not pdf_bytes or len(pdf_bytes) == 0:
@@ -2963,7 +2814,7 @@ def show_summary_report_tab(params, recommendation, design_financial, soil_type)
         
         # Download button
         st.download_button(
-            label="Download Complete Report (PDF)",
+            label=T('results_download_pdf'),
             data=pdf_bytes,
             file_name=f"Hydro_Assess_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
@@ -2971,86 +2822,86 @@ def show_summary_report_tab(params, recommendation, design_financial, soil_type)
         )
         
         # Report preview
-        st.subheader("Report Preview")
+        st.subheader(T('results_report_preview'))
         
         preview_col1, preview_col2 = st.columns(2)
         
         with preview_col1:
-            st.markdown("**Report Contents:**")
+            st.markdown(f"**{T('results_report_contents')}**")
             contents = [
-                "Executive Summary & Recommendation",
-                "System Design & Specifications", 
-                "Financial Analysis & Cost Breakdown",
-                "Site Characteristics & Geo-hydrology",
-                "Implementation Guidelines",
-                "Maintenance Recommendations"
+                T('results_executive_summary_recommendation'),
+                T('results_system_design_specifications'), 
+                T('results_financial_analysis_cost_breakdown'),
+                T('results_site_characteristics_geohydrology'),
+                T('results_implementation_guidelines'),
+                T('results_maintenance_recommendations')
             ]
             
             for i, content in enumerate(contents, 1):
                 st.write(f"{i}. {content}")
         
         with preview_col2:
-            st.markdown("### Key Deliverables:")
+            st.markdown(f"### {T('results_key_deliverables')}")
             
             # Create styled deliverables list
             deliverables_html = f"""
             <div style="background: var(--bg-secondary); border-radius: 12px; padding: 20px; margin: 15px 0; border: 1px solid var(--border-color);">
                 <ul style="margin: 0; padding-left: 20px; color: var(--text-primary); line-height: 1.8;">
-                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• Strategy: {recommendation['recommendation_type']}</li>
-                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• Investment: ₹ {design_financial['total_cost']:,.0f}</li>
-                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• Annual Benefit: ₹ {design_financial['annual_savings']:,.0f}</li>
-                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• Harvest Potential: {recommendation['annual_potential']:,.0f} L/year</li>
-                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• Efficiency Rating: {recommendation['efficiency_rating']}</li>
-                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• Technical Specifications & Drawings</li>
+                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• {T('results_strategy')}: {recommendation['recommendation_type']}</li>
+                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• {T('results_investment')}: ₹ {design_financial['total_cost']:,.0f}</li>
+                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• {T('results_annual_benefit')}: ₹ {design_financial['annual_savings']:,.0f}</li>
+                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• {T('results_harvest_potential')}: {recommendation['annual_potential']:,.0f} L/year</li>
+                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• {T('results_efficiency_rating_label')}: {recommendation['efficiency_rating']}</li>
+                    <li style="margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">• {T('results_technical_specifications_drawings')}</li>
                 </ul>
             </div>
             """
             st.markdown(deliverables_html, unsafe_allow_html=True)
         
         # Implementation next steps
-        st.subheader("Recommended Next Steps")
+        st.subheader(T('results_recommended_next_steps'))
         next_steps = [
-            "1. **Finalize Design**: Consult with local contractors for site-specific modifications",
-            "2. **Obtain Permits**: Check local building codes and water authority requirements",
-            "3. **Source Materials**: Procure system components based on specifications",
-            "4. **Schedule Installation**: Plan installation during dry season if possible",
-            "5. **Setup Maintenance**: Establish regular inspection and cleaning schedule"
+            f"1. **{T('results_finalize_design')}**",
+            f"2. **{T('results_obtain_permits')}**",
+            f"3. **{T('results_source_materials')}**",
+            f"4. **{T('results_schedule_installation')}**",
+            f"5. **{T('results_setup_maintenance')}**"
         ]
         
         for step in next_steps:
             st.write(step)
             
     except Exception as e:
-        st.error(f"Error generating PDF report: {str(e)}")
+        st.error(T('results_pdf_generation_error') + f": {str(e)}")
         
         # Provide more specific error information
         error_type = type(e).__name__
         if "bytearray" in str(e).lower():
-            st.info("💡 **PDF Generation Issue**: This appears to be a compatibility issue with the PDF library. Trying alternative method...")
+            st.info(f"💡 **{T('results_pdf_issue')}**: {T('results_pdf_compatibility')}")
             
             # Try alternative PDF generation without charts
             try:
-                st.warning("Generating simplified report without charts...")
+                st.warning(T('results_generating_simplified'))
                 pdf_bytes_simple = generate_pdf_report(params, recommendation, design_financial, site_data, None)
                 
                 if pdf_bytes_simple and isinstance(pdf_bytes_simple, bytes):
-                    st.success("Simplified report generated successfully!")
+                    st.success(T('results_simplified_success'))
                     st.download_button(
-                        label="Download Simplified Report (PDF)",
+                        label=T('results_download_simplified'),
                         data=pdf_bytes_simple,
                         file_name=f"Hydro_Assess_Simple_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                         mime="application/pdf",
                         type="secondary"
                     )
                 else:
-                    st.error("Unable to generate even simplified report.")
+                    st.error(T('results_unable_generate'))
             except Exception as e2:
-                st.error(f"Alternative PDF generation also failed: {str(e2)}")
+                st.error(T('results_alternative_failed') + f": {str(e2)}")
         
         # Show debugging information
-        with st.expander("🔧 Technical Details (for debugging)"):
+        with st.expander(f"🔧 {T('results_technical_details')}"):
             st.code(f"Error Type: {error_type}\nError Message: {str(e)}")
-            st.info("If this error persists, please try:\n1. Refreshing the page\n2. Running the assessment again\n3. Checking your internet connection")
+            st.info(T('results_error_persist'))
 
 # --- MAIN APPLICATION ---
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import streamlit as st
 import folium
+from translator import T, main_page_language_selector
 from streamlit_folium import st_folium
 from folium.plugins import Draw
 from streamlit_geolocation import streamlit_geolocation
@@ -8,28 +9,35 @@ from pyproj import Geod
 import requests
 import json
 
+# Initialize language in session state
+if 'language' not in st.session_state:
+    st.session_state.language = 'en'
+
 # --- Page Configuration ---
-st.set_page_config(layout="wide", page_title="Map Tool")
+st.set_page_config(layout="wide", page_title=T('page_title_map'))
 
 # Complete CSS replacement for map.py - Replace the entire st.markdown CSS section with this:
 
-st.title("Interactive Satellite Map with Area Calculation")
+# Add language selector to main page
+main_page_language_selector()
+
+st.title(T('map_title'))
 
 # Navigation (updated labels & improved wording)
 col1, col2 = st.columns([1, 1])
 with col1:
-    if st.button("🏠 Back to Home — Return to Dashboard", use_container_width=True, help="Go back to the main Hydro‑Assess page"):
+    if st.button(T('nav_home'), use_container_width=True, help=T('nav_home_help')):
         st.switch_page("index.py")
 with col2:
-    if st.button("⚙️ Open Calculator — Start Assessment", use_container_width=True, help="Open the intelligent recommendation engine to analyze this area"):
+    if st.button(T('nav_calculator'), use_container_width=True, help=T('nav_calculator_help')):
         st.switch_page("pages/calc.py")
 
 # --- Google API Configuration ---
 GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY", "")
 
 if not GOOGLE_API_KEY:
-    st.warning("Google API Key not configured. Add GOOGLE_API_KEY to your secrets.toml file for enhanced search.")
-    st.info("Get your API key from: https://console.cloud.google.com/")
+    st.warning(T('map_api_warning'))
+    st.info(T('map_api_info'))
 
 # --- Area Calculation Function ---
 def calculate_geodesic_area(coordinates):
@@ -192,20 +200,20 @@ if 'map_selected_place' not in st.session_state:
 # --- Location Selection UI (Similar to calc.py onboarding) ---
 def show_location_selection():
     """Show location selection interface similar to calc.py onboarding"""
-    st.markdown("### Choose Your Location Method")
-    st.markdown("Select how you'd like to set your location on the map:")
+    st.markdown(f"### {T('map_location_method')}")
+    st.markdown(T('map_location_instruction'))
     
     location_method = st.radio(
-        "Location Selection Method:",
-        ["Use GPS", "Search Address/Place", "Enter Coordinates", "Quick Locations"],
+        T('map_location_method'),
+        [T('map_method_gps'), T('map_method_search'), T('map_method_coordinates'), T('map_method_quick')],
         horizontal=True
     )
     
     latitude, longitude = None, None
     selected_place = None
     
-    if location_method == "Use GPS":
-        st.markdown("#### GPS Location")
+    if location_method == T('map_method_gps'):
+        st.markdown(f"#### {T('map_gps_title')}")
         try:
             def _try_geolocation():
                 loc = streamlit_geolocation()
@@ -240,23 +248,23 @@ def show_location_selection():
                 latitude = lat
                 longitude = lng
                 if source == 'ip':
-                    st.info("Using approximate location (IP-based)")
+                    st.info(T('map_gps_approximate'))
                 else:
-                    st.success("GPS location acquired successfully")
+                    st.success(T('msg_gps_success'))
             else:
-                if st.button("Get GPS Location", use_container_width=True):
+                if st.button(T('button_get_gps'), use_container_width=True):
                     st.rerun()
-                st.info("Click the button above to get your GPS location")
+                st.info(T('map_gps_info'))
                     
         except ImportError:
             st.error("GPS functionality requires 'streamlit-geolocation' package.")
             st.code("pip install streamlit-geolocation")
     
-    elif location_method == "Search Address/Place":
-        st.markdown("#### Address/Place Search")
+    elif location_method == T('map_method_search'):
+        st.markdown(f"#### {T('map_search_title')}")
         search_query = st.text_input(
-            "Enter address, place name, or landmark:",
-            placeholder="e.g., IIT Delhi Campus, New Delhi"
+            T('map_search_label'),
+            placeholder=T('map_search_placeholder')
         )
 
         # Autocomplete suggestions (your existing code for this is fine)
@@ -264,7 +272,7 @@ def show_location_selection():
             suggestions = get_place_suggestions(search_query, GOOGLE_API_KEY)
             if suggestions:
                 selected_suggestion = st.selectbox(
-                    "Suggestions:",
+                    T('map_search_suggestions'),
                     options=[""] + suggestions,
                     key="place_suggestion_box"
                 )
@@ -273,8 +281,8 @@ def show_location_selection():
 
         # --- CORRECTED SEARCH LOGIC ---
         # This section now handles all results consistently.
-        if st.button("Search", use_container_width=True) and search_query:
-            with st.spinner("Searching..."):
+        if st.button(T('button_search'), use_container_width=True) and search_query:
+            with st.spinner(T('button_search') + '...'):
                 search_result = perform_search(search_query)
 
                 # Unified logic: Always store results in a list in session_state
@@ -286,7 +294,7 @@ def show_location_selection():
                         # If multiple results, use the list directly
                         st.session_state.map_search_results = search_result['data']
                 else:
-                    st.error("Location not found. Try different search terms.")
+                    st.error(T('map_search_error'))
                     st.session_state.map_search_results = []
 
         # --- CORRECTED RESULT DISPLAY & SELECTION ---
@@ -301,7 +309,7 @@ def show_location_selection():
 
             # Let the user select a result using a radio button
             selected_display_name = st.radio(
-                "Select from results:",
+                T('map_search_results'),
                 options.keys()
             )
 
@@ -312,23 +320,23 @@ def show_location_selection():
                 # Handle both 'lng' (from Google) and 'lon' (from Nominatim)
                 longitude = selected_result_data.get('lng') or selected_result_data.get('lon')
                 selected_place = selected_result_data
-    elif location_method == "Enter Coordinates":
-        st.markdown("#### Manual Coordinates")
+    elif location_method == T('map_method_coordinates'):
+        st.markdown(f"#### {T('map_coordinates_title')}")
         col1, col2 = st.columns(2)
         with col1:
-            latitude = st.number_input("Latitude", value=12.9716, format="%.6f")
+            latitude = st.number_input(T('map_latitude_label'), value=12.9716, format="%.6f")
         with col2:
-            longitude = st.number_input("Longitude", value=77.5946, format="%.6f")
+            longitude = st.number_input(T('map_longitude_label'), value=77.5946, format="%.6f")
         
-        if st.button("Set Location", use_container_width=True):
+        if st.button(T('button_set_location'), use_container_width=True):
             if -90 <= latitude <= 90 and -180 <= longitude <= 180:
-                st.success("Coordinates set successfully!")
+                st.success(T('msg_coordinates_success'))
             else:
-                st.error("Invalid coordinates. Please check your values.")
+                st.error(T('map_coordinates_error'))
                 latitude, longitude = None, None
     
     else:  # Quick Locations
-        st.markdown("#### Quick Location Shortcuts")
+        st.markdown(f"#### {T('map_quick_title')}")
         quick_locations = {
             "Delhi, India": [28.6139, 77.2090],
             "Mumbai, India": [19.0760, 72.8777],
@@ -340,27 +348,27 @@ def show_location_selection():
             "Tokyo, Japan": [35.6762, 139.6503]
         }
         
-        selected_city = st.selectbox("Choose a city:", [""] + list(quick_locations.keys()))
+        selected_city = st.selectbox(T('map_quick_choose'), [""] + list(quick_locations.keys()))
         
-        if selected_city and st.button("Use This Location", use_container_width=True):
+        if selected_city and st.button(T('button_use_location'), use_container_width=True):
             latitude, longitude = quick_locations[selected_city]
             selected_place = {'name': selected_city, 'address': selected_city}
-            st.success(f"Selected: {selected_city}")
+            st.success(f"{T('map_quick_selected')} {selected_city}")
     
     # Apply location button
     st.markdown("---")
     can_proceed = latitude is not None and longitude is not None
     
     if not can_proceed:
-        st.warning("Please set a location using one of the methods above.")
+        st.warning(T('msg_location_warning'))
     
-    if st.button("Apply Location to Map", type="primary", disabled=not can_proceed, use_container_width=True):
+    if st.button(T('map_apply_location'), type="primary", disabled=not can_proceed, use_container_width=True):
         st.session_state.map_initial_center = [latitude, longitude]
         st.session_state.map_initial_zoom = 16
         st.session_state.map_location_set = True
         st.session_state.map_selected_place = selected_place
         st.session_state.map_search_results = []  # Clear any search results
-        st.success("Location applied! Loading map...")
+        st.success(T('msg_location_applied'))
         time.sleep(0.5)
         st.rerun()
 
@@ -375,17 +383,17 @@ st.markdown("---")
 # Controls
 col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
 with col1:
-    if st.button("🔄 Reset Map View", use_container_width=True, help="Reset the map to the initial center and zoom"):
+    if st.button(T('button_reset_view'), use_container_width=True, help=T('map_reset_help')):
         st.session_state.map_force_refresh += 1
         st.rerun()
 with col2:
-    if st.button("📍 Change Location", use_container_width=True, help="Choose a different location or re-run the location selection"):
+    if st.button(T('button_change_location'), use_container_width=True, help=T('map_change_help')):
         st.session_state.map_location_set = False
         st.session_state.map_selected_place = None
         st.session_state.map_search_results = []
         st.rerun()
 with col3:
-    if st.button("🔎 New Search", use_container_width=True, help="Start a fresh address/place search"):
+    if st.button(T('button_new_search'), use_container_width=True, help=T('map_new_search_help')):
         st.session_state.map_location_set = False
         st.rerun()
 with col4:
@@ -394,9 +402,9 @@ with col4:
                      st.session_state.map_selected_place.get('display_name') or
                      st.session_state.map_selected_place.get('name', ''))
         if place_info:
-            st.info(f"Location: {place_info[:120]}")  # show slightly more text
+            st.info(f"{T('map_location_info_prefix')} {place_info[:120]}")  # show slightly more text
     else:
-        st.info("Draw polygons or rectangles on the map to calculate area")
+        st.info(T('map_draw_instructions'))
 
 # Create map
 m = folium.Map(
@@ -495,34 +503,34 @@ if map_data and map_data.get("last_active_drawing"):
                 
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Area (m²)", f"{area['area_m2']:,.2f}")
+                    st.metric(T('map_area_metric'), f"{area['area_m2']:,.2f}")
                 with col2:
-                    st.metric("Area (sq ft)", f"{area['area_m2'] * 10.764:,.2f}")
+                    st.metric(T('map_area_sqft'), f"{area['area_m2'] * 10.764:,.2f}")
                 with col3:
-                    st.metric("Area (acres)", f"{area['area_m2'] / 4047:,.4f}")
+                    st.metric(T('map_area_acres'), f"{area['area_m2'] / 4047:,.4f}")
                 with col4:
-                    if st.button("🔍 Generate Detailed Analysis & Recommendations", use_container_width=True, help="Create a full assessment using this selected area"):
+                    if st.button(T('map_generate_analysis'), use_container_width=True, help=T('map_generate_help')):
                         st.switch_page("pages/calc.py")
 
 # Sidebar with info
 with st.sidebar:
-    st.header("Current Location")
-    st.write(f"**Lat:** {st.session_state.map_initial_center[0]:.6f}")
-    st.write(f"**Lng:** {st.session_state.map_initial_center[1]:.6f}")
+    st.header(T('map_sidebar_current'))
+    st.write(f"**{T('map_sidebar_lat')}** {st.session_state.map_initial_center[0]:.6f}")
+    st.write(f"**{T('map_sidebar_lng')}** {st.session_state.map_initial_center[1]:.6f}")
     
     if st.session_state.map_selected_place:
         st.markdown("---")
-        st.header("Selected Place")
+        st.header(T('map_sidebar_selected'))
         place = st.session_state.map_selected_place
         if 'name' in place:
-            st.write(f"**Name:** {place['name']}")
+            st.write(f"**{T('map_sidebar_name')}** {place['name']}")
         if 'address' in place:
-            st.write(f"**Address:** {place['address']}")
+            st.write(f"**{T('map_sidebar_address')}** {place['address']}")
         elif 'display_name' in place:
-            st.write(f"**Address:** {place['display_name']}")
+            st.write(f"**{T('map_sidebar_address')}** {place['display_name']}")
     
     st.markdown("---")
-    if st.button("↺ Reset to Default Location & View", use_container_width=True, help="Restore original demo location and zoom"):
+    if st.button(T('map_sidebar_reset'), use_container_width=True, help=T('map_sidebar_reset_help')):
         st.session_state.map_initial_center = DEFAULT_LOCATION
         st.session_state.map_initial_zoom = DEFAULT_ZOOM
         st.session_state.map_force_refresh += 1
@@ -531,16 +539,12 @@ with st.sidebar:
         st.rerun()
     
     st.markdown("---")
-    st.header("Instructions")
-    st.write("1. Location is set and marked")
-    st.write("2. Use drawing tools to select area")
-    st.write("3. Draw polygon or rectangle")
-    st.write("4. View calculated area")
-    st.write("5. Switch between map layers")
-    st.write("6. Click 'Generate Analysis' to proceed")
+    st.header(T('map_sidebar_instructions'))
+    for instruction in T('map_instructions_list'):
+        st.write(instruction)
     
     st.markdown("---")
-    st.header("Map Layers")
-    st.write("• **Satellite:** High-resolution aerial imagery")
-    st.write("• **Hybrid:** Satellite with road labels")
-    st.write("• **Street Map:** Traditional road map")
+    st.header(T('map_layers'))
+    st.write(T('map_layer_satellite_desc'))
+    st.write(T('map_layer_hybrid_desc'))
+    st.write(T('map_layer_street_desc'))
