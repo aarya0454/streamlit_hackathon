@@ -2612,6 +2612,66 @@ def show_financial_analysis_tab(design_financial, recommendation):
     with col2:
         st.subheader(T('results_financial_benefits'))
         
+        # Create bar chart for cost breakdown
+        if filtered_costs:
+            # Create bar chart
+            fig_bar, ax_bar = plt.subplots(figsize=(10, 6))
+            
+            # Set dark mode compatible styling
+            is_dark_mode = True  # Assume dark mode for better compatibility
+            
+            if is_dark_mode:
+                fig_bar.patch.set_facecolor('#0e1117')  # Streamlit dark background
+                ax_bar.set_facecolor('#0e1117')
+                text_color = '#ffffff'
+                grid_color = '#404040'
+            else:
+                fig_bar.patch.set_facecolor('white')
+                ax_bar.set_facecolor('white')
+                text_color = '#2c3e50'
+                grid_color = '#cccccc'
+            
+            # Prepare data for bar chart
+            components = [k.replace('_', ' ').title() for k in filtered_costs.keys()]
+            cost_values = list(filtered_costs.values())
+            
+            # Create horizontal bar chart for better readability
+            bars = ax_bar.barh(components, cost_values, color=colors, alpha=0.8, 
+                              edgecolor='white', linewidth=1)
+            
+            # Style the chart
+            ax_bar.set_xlabel('Cost (₹)', fontsize=12, fontweight='bold', color=text_color)
+            ax_bar.set_ylabel('Components', fontsize=12, fontweight='bold', color=text_color)
+            ax_bar.set_title('Cost Breakdown by Component', fontsize=14, fontweight='bold', 
+                           color=text_color, pad=20)
+            
+            # Add value labels on bars
+            for bar, value in zip(bars, cost_values):
+                width = bar.get_width()
+                ax_bar.text(width + max(cost_values) * 0.02, bar.get_y() + bar.get_height()/2,
+                           f'₹{value/1000:.0f}K', ha='left', va='center', 
+                           fontweight='bold', fontsize=10, color=text_color)
+            
+            # Style grid and ticks
+            ax_bar.grid(True, alpha=0.3, color=grid_color, linestyle='--', axis='x')
+            ax_bar.tick_params(colors=text_color)
+            
+            # Remove top and right spines
+            for spine in ['top', 'right']:
+                ax_bar.spines[spine].set_visible(False)
+            
+            # Style remaining spines
+            for spine in ['bottom', 'left']:
+                ax_bar.spines[spine].set_color(text_color)
+            
+            # Format x-axis labels
+            ax_bar.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'₹{x/1000:.0f}K'))
+            
+            # Adjust layout
+            plt.tight_layout()
+            
+            st.pyplot(fig_bar)
+        
         if design_financial['annual_savings'] > 0:
             # Create savings projection chart
             years = list(range(1, 11))

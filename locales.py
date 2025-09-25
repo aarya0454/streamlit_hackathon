@@ -498,8 +498,10 @@ translations = {
         'results_design_capacity': 'डिजाइन क्षमता',
         'results_storage_volume': 'भंडारण मात्रा',
         'results_recharge_volume': 'रिचार्ज मात्रा',
-        'results_report_preview': 'रिपोर्ट पूर्वावलोकन',
-        'results_recommended_next_steps': 'अनुशंसित अगले चरण',
+        'results_cost_distribution': 'सिस्टम लागत वितरण',
+        'results_financial_projection': '10-वर्षीय वित्तीय अनुमान',
+        'results_cost_breakdown_bar_chart': 'लागत वितरण बार चार्ट',
+        'results_cost_vs_budget': 'लागत बनाम बजट तुलना',
     
         
         # Map Page
