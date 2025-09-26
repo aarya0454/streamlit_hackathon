@@ -52,6 +52,15 @@ st.markdown("""
         margin: 0 auto;
     }
     
+    /* Mobile responsive container */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-bottom: 1rem;
+        }
+    }
+    
     /* Professional static gradient background */
     .stApp {
         background: linear-gradient(135deg, #004d40 0%, #011f4b 100%);
@@ -112,6 +121,30 @@ st.markdown("""
         font-weight: 400;
     }
     
+    /* Mobile responsive typography */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.75rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+    }
+    
     /* Card styling */
     .feature-card {
         background: rgba(255, 255, 255, 0.08);
@@ -127,6 +160,9 @@ st.markdown("""
         min-height: 320px;
         margin: 1rem 0;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
     }
     
     .feature-card:hover {
@@ -142,6 +178,8 @@ st.markdown("""
         font-size: 1.5rem;
         font-weight: 600;
         text-align: center;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .feature-card p {
@@ -151,6 +189,44 @@ st.markdown("""
         margin-bottom: 1.5rem;
         flex-grow: 1;
         text-align: center;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Mobile responsive feature cards */
+    @media (max-width: 768px) {
+        .feature-card {
+            padding: 1.5rem;
+            margin: 0.5rem 0;
+            min-height: 280px;
+            border-radius: 12px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .feature-card {
+            padding: 1.25rem;
+            min-height: 250px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.125rem;
+        }
+        
+        .feature-card p {
+            font-size: 0.875rem;
+        }
     }
     
     .icon-wrapper {
@@ -170,6 +246,32 @@ st.markdown("""
         height: 32px;
     }
     
+    /* Mobile responsive icon wrapper */
+    @media (max-width: 768px) {
+        .icon-wrapper {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 1rem auto;
+        }
+        
+        .icon-wrapper svg {
+            width: 28px;
+            height: 28px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .icon-wrapper {
+            width: 48px;
+            height: 48px;
+        }
+        
+        .icon-wrapper svg {
+            width: 24px;
+            height: 24px;
+        }
+    }
+    
     /* Button styling */
     .stButton > button {
         background: linear-gradient(135deg, #2E8B57 0%, #005A9C 100%);
@@ -184,6 +286,9 @@ st.markdown("""
         box-shadow: 0 8px 24px rgba(46, 139, 87, 0.3);
         text-transform: none;
         font-family: 'Inter', sans-serif;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     
     .stButton > button:hover {
@@ -191,6 +296,23 @@ st.markdown("""
         box-shadow: 0 12px 32px rgba(46, 139, 87, 0.4);
         background: linear-gradient(135deg, #247349 0%, #004d85 100%);
         border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Mobile responsive buttons */
+    @media (max-width: 768px) {
+        .stButton > button {
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            border-radius: 40px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stButton > button {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            letter-spacing: 0.25px;
+        }
     }
     
     /* Icon styling */
@@ -270,6 +392,48 @@ st.markdown("""
         text-transform: uppercase;
     }
     
+    /* Mobile responsive logo section */
+    @media (max-width: 768px) {
+        .logo-section {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .logo-icon {
+            font-size: 3.5rem;
+        }
+        
+        .logo-text {
+            font-size: 2.5rem;
+        }
+        
+        .logo-subtitle {
+            font-size: 1rem;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .logo-section {
+            gap: 0.75rem;
+        }
+        
+        .logo-icon {
+            font-size: 3rem;
+        }
+        
+        .logo-text {
+            font-size: 2rem;
+        }
+        
+        .logo-subtitle {
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+    }
+    
     /* Hero section */
     .hero-section {
         text-align: center;
@@ -309,6 +473,52 @@ st.markdown("""
         padding: 0 1rem;
     }
     
+    /* Mobile responsive hero section */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 1.5rem 0 2rem 0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-title {
+            font-size: 2.75rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+            letter-spacing: 1.5px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tagline {
+            font-size: 1.125rem;
+            margin: 1.5rem auto;
+            padding: 0 0.5rem;
+            max-width: 100%;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .hero-section {
+            padding: 1rem 0 1.5rem 0;
+        }
+        
+        .hero-title {
+            font-size: 2.25rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        
+        .tagline {
+            font-size: 1rem;
+            margin: 1rem auto;
+        }
+    }
+    
     /* Step cards */
     .step-card {
         background: rgba(255, 255, 255, 0.06);
@@ -324,6 +534,9 @@ st.markdown("""
         flex-direction: column;
         justify-content: space-between;
         min-height: 280px;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
     }
     
     .step-card:hover {
@@ -353,6 +566,8 @@ st.markdown("""
         font-weight: 600;
         margin-bottom: 1rem;
         text-align: center;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .step-card p {
@@ -362,6 +577,56 @@ st.markdown("""
         margin-bottom: 1rem;
         text-align: center;
         flex-grow: 1;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Mobile responsive step cards */
+    @media (max-width: 768px) {
+        .step-card {
+            padding: 1.5rem;
+            margin: 0.5rem 0;
+            min-height: 240px;
+            border-radius: 12px;
+        }
+        
+        .step-number {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .step-card h4 {
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .step-card p {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .step-card {
+            padding: 1.25rem;
+            min-height: 220px;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            font-size: 0.9rem;
+        }
+        
+        .step-card h4 {
+            font-size: 1rem;
+        }
+        
+        .step-card p {
+            font-size: 0.8rem;
+        }
     }
     
     /* Quote styling */
@@ -399,6 +664,9 @@ st.markdown("""
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.1);
         transition: all 0.3s ease;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
     }
     
     .stat-box:hover {
@@ -412,6 +680,62 @@ st.markdown("""
         font-weight: 900;
         color: #2E8B57;
         margin-bottom: 0.5rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Mobile responsive stat boxes */
+    @media (max-width: 768px) {
+        .stat-box {
+            padding: 1.25rem;
+            border-radius: 10px;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            margin-bottom: 0.4rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stat-box {
+            padding: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 1.75rem;
+        }
+    }
+    
+    /* Global mobile optimizations */
+    @media (max-width: 768px) {
+        /* Ensure all content fits within viewport */
+        * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* Prevent horizontal overflow */
+        .stApp, .main, .block-container {
+            overflow-x: hidden !important;
+        }
+        
+        /* Streamlit column responsiveness */
+        .row-widget.stHorizontal > div {
+            flex: 1 1 100% !important;
+            min-width: 0 !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        /* Extra small screen optimizations */
+        .section {
+            margin: 2rem 0 !important;
+        }
+        
+        .header-content {
+            padding: 0 1rem !important;
+        }
     }
     
     /* System works cards hover effects */
