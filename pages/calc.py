@@ -560,6 +560,17 @@ st.markdown("""
 # Add language selector to main page
 main_page_language_selector()
 
+# Navigation buttons (similar to map.py)
+col1, col2 = st.columns([1, 1])
+with col1:
+    if st.button(T('nav_home'), use_container_width=True, help=T('nav_home_help')):
+        st.switch_page("index.py")
+with col2:
+    if st.button(T('nav_map'), use_container_width=True, help=T('nav_map_help')):
+        st.switch_page("pages/map.py")
+
+st.markdown("---")
+
 if 'groundwater_gdf' not in st.session_state:
     st.session_state['groundwater_gdf'] = None
 if 'data_source' not in st.session_state:

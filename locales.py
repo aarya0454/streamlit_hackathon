@@ -26,6 +26,7 @@ translations = {
         'nav_calculator': '⚙️ Open Calculator — Start Assessment',
         'nav_calculator_help': 'Open the intelligent recommendation engine to analyze this area',
         'nav_map': '🗺️ Map Your Property',
+        'nav_map_help': 'Go to the interactive map tool to select and analyze property areas',
         'nav_start_assessment': '⚙️ Start Assessment',
         
         # Statistics - Additional entries for About section stat boxes (lines 594-595 in index.py) need these keys to be defined in locales.py for proper translation support across all languages
@@ -456,6 +457,7 @@ translations = {
         'nav_calculator': '⚙️ कैलकुलेटर खोलें — मूल्यांकन शुरू करें',
         'nav_calculator_help': 'इस क्षेत्र का विश्लेषण करने के लिए बुद्धिमान सिफारिश इंजन खोलें',
         'nav_map': '🗺️ अपनी संपत्ति का मानचित्र बनाएं',
+        'nav_map_help': 'संपत्ति क्षेत्रों का चयन और विश्लेषण करने के लिए इंटरैक्टिव मानचित्र उपकरण पर जाएं',
         'nav_start_assessment': '⚙️ मूल्यांकन शुरू करें',
         
         # Statistics - Additional entries for About section stat boxes (lines 594-595 in index.py) need these keys to be defined in locales.py for proper translation support across all languages
@@ -895,6 +897,7 @@ translations = {
         'nav_calculator': '⚙️ கால்குலேட்டர் திற — மதிப்பீட்டை தொடங்கு',
         'nav_calculator_help': 'இந்த பகுதியை பகுப்பாய்வு செய்ய அறிவார்ந்த பரிந்துரை இயந்திரத்தை திறக்கவும்',
         'nav_map': '🗺️ உங்கள் சொத்தை வரைபடமிடுங்கள்',
+        'nav_map_help': 'சொத்து பகுதிகளை தேர்ந்தெடுத்து பகுப்பாய்வு செய்ய ஊடாடும் வரைபட கருவிக்கு செல்லுங்கள்',
         'nav_start_assessment': '⚙️ மதிப்பீட்டை தொடங்கு',
         
         # Statistics - Additional entries for About section stat boxes (lines 594-595 in index.py) need these keys to be defined in locales.py for proper translation support across all languages
