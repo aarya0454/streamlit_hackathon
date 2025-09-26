@@ -167,3 +167,6 @@ venv.bak/
 
 # Pyre type checker
 .pyre/
+
+!/.streamlit
+
