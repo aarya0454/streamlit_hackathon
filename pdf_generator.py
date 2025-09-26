@@ -620,11 +620,11 @@ class HydroAssessPDFReport:
         # Build content
         story = []
         
-        # Title Page - clean and simple
-        story.append(Spacer(1, 1*inch))
+        # Combined Title and Executive Summary Page - clean and simple
+        story.append(Spacer(1, 0.5*inch))
         title_text = T('results_comprehensive_report')
         story.append(self._safe_paragraph(title_text, self.styles['CustomTitle']))
-        story.append(Spacer(1, 0.5*inch))
+        story.append(Spacer(1, 0.3*inch))
         
         # Date and location - minimal formatting
         coords_text = f"{T('results_coordinates')}: {params['latitude']:.4f}°, {params['longitude']:.4f}°"
@@ -632,10 +632,10 @@ class HydroAssessPDFReport:
         
         story.append(self._safe_paragraph(coords_text, self.styles['CustomBody']))
         story.append(self._safe_paragraph(date_text, self.styles['CustomBody']))
-        story.append(PageBreak())
+        story.append(Spacer(1, 0.4*inch))
         
         # Executive Summary Section - clean header
-        story.append(Spacer(1, 0.2*inch))
+        story.append(Spacer(1, 0.1*inch))
         
         # Simple header bar
         header_table = Table([[self._safe_paragraph(T('results_executive_summary'), self.styles['CustomHeading'])]], 
@@ -866,27 +866,27 @@ class HydroAssessPDFReport:
                 # Investment Overview with enhanced layout - shows both storage and recharge benefits
         financial_overview = [
             [self._safe_paragraph(f"<b>{T('results_total_system_cost')}</b>", self.styles['TableCell']),
-             self._safe_paragraph(f"<b>₹ {design_financial['total_cost']:,.0f}</b>", self.styles['TableCell'])],
+             self._safe_paragraph(f"<b>Rs {design_financial['total_cost']:,.0f}</b>", self.styles['TableCell'])],
             [self._safe_paragraph(T('results_annual_maintenance'), self.styles['TableCell']),
-             self._safe_paragraph(f"₹ {design_financial['maintenance_cost_annual']:,.0f}", self.styles['TableCell'])],
+             self._safe_paragraph(f"Rs {design_financial['maintenance_cost_annual']:,.0f}", self.styles['TableCell'])],
         ]
         
         # Show breakdown of savings/benefits
         if design_financial.get('direct_water_savings', 0) > 0:
             financial_overview.append([
                 self._safe_paragraph(T('results_direct_water_savings'), self.styles['TableCell']),
-                self._safe_paragraph(f"₹ {design_financial['direct_water_savings']:,.0f}", self.styles['TableCell'])
+                self._safe_paragraph(f"Rs {design_financial['direct_water_savings']:,.0f}", self.styles['TableCell'])
             ])
             
         if design_financial.get('recharge_benefits', 0) > 0:
             financial_overview.append([
                 self._safe_paragraph(T('results_recharge_benefits'), self.styles['TableCell']),
-                self._safe_paragraph(f"₹ {design_financial['recharge_benefits']:,.0f}", self.styles['TableCell'])
+                self._safe_paragraph(f"Rs {design_financial['recharge_benefits']:,.0f}", self.styles['TableCell'])
             ])
             
         financial_overview.append([
             self._safe_paragraph(f"<b>{T('results_total_annual_benefits')}</b>", self.styles['TableCell']),
-            self._safe_paragraph(f"<b>₹ {design_financial['annual_savings']:,.0f}</b>", self.styles['TableCell'])
+            self._safe_paragraph(f"<b>Rs {design_financial['annual_savings']:,.0f}</b>", self.styles['TableCell'])
         ])
 
         if design_financial['payback_period_years'] != float('inf'):
@@ -946,31 +946,57 @@ class HydroAssessPDFReport:
             if translated_name != translation_key:
                 display_name = translated_name
             else:
-                # Fallback to formatted component name with better formatting
+                # Enhanced fallback with more comprehensive component mapping
                 display_name = component.replace('_', ' ').title()
-                # Add some common component name improvements
-                if 'first flush' in display_name.lower():
-                    display_name = 'First Flush Diverter'
-                elif 'filtration' in display_name.lower():
-                    display_name = 'Filtration System'
-                elif 'guttering' in display_name.lower():
-                    display_name = 'Guttering and Pipes'
-                elif 'installation' in display_name.lower():
-                    display_name = 'Installation Labor'
-                elif 'storage' in display_name.lower():
-                    display_name = 'Storage Tank'
-                elif 'recharge' in display_name.lower():
-                    display_name = 'Recharge System'
+                
+                # Comprehensive component name mapping
+                component_mappings = {
+                    'first_flush_diverter': 'First Flush Diverter',
+                    'filtration_system': 'Filtration System', 
+                    'guttering_and_pipes': 'Guttering and Pipes',
+                    'installation_labor': 'Installation Labor',
+                    'storage_tank': 'Storage Tank',
+                    'recharge_system': 'Recharge System',
+                    'pipes': 'Pipes',
+                    'guttering': 'Guttering System',
+                    'labor': 'Labor Cost',
+                    'installation': 'Installation',
+                    'materials': 'Materials',
+                    'excavation': 'Excavation Work',
+                    'concrete': 'Concrete Work',
+                    'plumbing': 'Plumbing',
+                    'electrical': 'Electrical Work',
+                    'miscellaneous': 'Miscellaneous Expenses'
+                }
+                
+                # Check if we have a specific mapping
+                if component in component_mappings:
+                    display_name = component_mappings[component]
+                else:
+                    # Apply keyword-based improvements
+                    lower_component = component.lower()
+                    if 'first' in lower_component and 'flush' in lower_component:
+                        display_name = 'First Flush Diverter'
+                    elif 'filtration' in lower_component or 'filter' in lower_component:
+                        display_name = 'Filtration System'
+                    elif 'gutter' in lower_component and 'pipe' in lower_component:
+                        display_name = 'Guttering and Pipes'
+                    elif 'installation' in lower_component and 'labor' in lower_component:
+                        display_name = 'Installation Labor'
+                    elif 'storage' in lower_component and 'tank' in lower_component:
+                        display_name = 'Storage Tank'
+                    elif 'recharge' in lower_component:
+                        display_name = 'Recharge System'
             
-            # Ensure we don't have empty display names
+            # Final safety check - ensure we don't have empty display names
             if not display_name or display_name.strip() == '':
-                display_name = component.replace('_', ' ').title()
+                display_name = f"Component {len(cost_data)}"  # Fallback with index
             
             cost_data.append([self._safe_paragraph(display_name, self.styles['TableCell']), 
-                             self._safe_paragraph(f"₹ {cost:,.0f}", self.styles['TableCell'])])
+                             self._safe_paragraph(f"Rs {cost:,.0f}", self.styles['TableCell'])])
 
         cost_data.append([self._safe_paragraph(f"<b>{T('results_total_system_cost')}</b>", self.styles['TableHeader']),
-                         self._safe_paragraph(f"<b>₹ {design_financial['total_cost']:,.0f}</b>", self.styles['TableHeader'])])
+                         self._safe_paragraph(f"<b>Rs {design_financial['total_cost']:,.0f}</b>", self.styles['TableHeader'])])
 
         cost_table = Table(cost_data, colWidths=[4*inch, 2.5*inch], 
                           rowHeights=[0.4*inch]*len(cost_data))
@@ -1076,18 +1102,34 @@ class HydroAssessPDFReport:
         story.append(env_header)
         story.append(Spacer(1, 0.2*inch))
 
+        # Calculate enhanced environmental metrics
+        annual_potential = recommendation.get('annual_potential', 0)
+        volume_to_recharge = recommendation.get('volume_to_recharge', 0)
+        household_coverage = recommendation.get('household_coverage_percent', 0)
+        
+        # Enhanced calculations for environmental impact
+        co2_reduction = annual_potential * 0.0003  # kg CO2 per liter
+        energy_savings = annual_potential * 0.004  # kWh saved per liter (pumping + treatment)
+        equivalent_trees = co2_reduction / 22  # 1 tree absorbs ~22kg CO2/year
+        water_table_impact = volume_to_recharge * 0.8  # 80% effective recharge
+        flood_mitigation = annual_potential * 0.001  # m³ flood water managed
+
         env_impact_data = [
             [self._safe_paragraph(T('results_water_independence'), self.styles['TableCell']),
-             self._safe_paragraph(f"{recommendation.get('household_coverage_percent', 0):.1f}% {T('results_annual_freshwater_demand')}", self.styles['TableCell'])],
+             self._safe_paragraph(f"{household_coverage:.1f}% {T('results_annual_freshwater_demand')}", self.styles['TableCell'])],
             [self._safe_paragraph(T('results_groundwater_recharge'), self.styles['TableCell']),
-             self._safe_paragraph(f"{recommendation.get('volume_to_recharge', 0):,.0f} L {T('results_annual_groundwater_replenishment')}", self.styles['TableCell'])],
+             self._safe_paragraph(f"{volume_to_recharge:,.0f} L {T('results_annual_groundwater_replenishment')}", self.styles['TableCell'])],
             [self._safe_paragraph(T('results_runoff_reduction'), self.styles['TableCell']),
-             self._safe_paragraph(f"{recommendation.get('annual_potential', 0)*0.001:.1f} m³ {T('results_reduced_stormwater_runoff')}", self.styles['TableCell'])],
+             self._safe_paragraph(f"{flood_mitigation:.1f} m³ {T('results_reduced_stormwater_runoff')}", self.styles['TableCell'])],
             [self._safe_paragraph(T('results_co2_reduction'), self.styles['TableCell']),
-             self._safe_paragraph(f"{recommendation.get('annual_potential', 0)*0.0003:.1f} kg {T('results_co2_year')}", self.styles['TableCell'])],
+             self._safe_paragraph(f"{co2_reduction:.1f} kg CO2 {T('results_co2_year')}", self.styles['TableCell'])],
+            [self._safe_paragraph(T('results_energy_savings'), self.styles['TableCell']),
+             self._safe_paragraph(f"{energy_savings:.0f} kWh per year (reduced pumping & treatment)", self.styles['TableCell'])],
+            [self._safe_paragraph(T('results_carbon_offset_equivalent'), self.styles['TableCell']),
+             self._safe_paragraph(f"Equivalent to planting {equivalent_trees:.1f} trees annually", self.styles['TableCell'])],
         ]
 
-        env_table = Table(env_impact_data, colWidths=[2.5*inch, 4*inch], rowHeights=[0.6*inch]*4)
+        env_table = Table(env_impact_data, colWidths=[2.5*inch, 4*inch], rowHeights=[0.6*inch]*6)
         env_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), ColorScheme.ACCENT),
             ('TEXTCOLOR', (0, 0), (0, -1), ColorScheme.WHITE),
@@ -1100,6 +1142,126 @@ class HydroAssessPDFReport:
             ('ROUNDEDCORNERS', [8, 8, 8, 8]),
         ]))
         story.append(env_table)
+        
+        story.append(PageBreak())
+
+        # Long-term Environmental Benefits - New Page
+        longterm_header = Table([[self._safe_paragraph(T('results_longterm_environmental_benefits'), self.styles['CustomSubHeading'])]], 
+                               colWidths=[6.5*inch], rowHeights=[0.4*inch])
+        longterm_header.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), ColorScheme.MEDIUM_GRAY),
+            ('TEXTCOLOR', (0, 0), (-1, -1), ColorScheme.WHITE),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+        ]))
+        story.append(longterm_header)
+        story.append(Spacer(1, 0.2*inch))
+
+        # Environmental benefits text - now fully translatable
+        env_benefits = [
+            T('results_env_benefit_1'),
+            T('results_env_benefit_2'),
+            T('results_env_benefit_3'),
+            T('results_env_benefit_4'),
+            T('results_env_benefit_5'),
+            T('results_env_benefit_6'),
+            T('results_env_benefit_7'),
+            T('results_env_benefit_8')
+        ]
+        
+        for benefit in env_benefits:
+            story.append(self._safe_paragraph(benefit, self.styles['CustomBody']))
+            story.append(Spacer(1, 0.1*inch))
+
+        story.append(PageBreak())
+
+        # Implementation Guidelines Section - New Page
+        impl_header = Table([[self._safe_paragraph(T('results_implementation_guidelines'), self.styles['CustomSubHeading'])]], 
+                           colWidths=[6.5*inch], rowHeights=[0.4*inch])
+        impl_header.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), ColorScheme.WARNING),
+            ('TEXTCOLOR', (0, 0), (-1, -1), ColorScheme.WHITE),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+        ]))
+        story.append(impl_header)
+        story.append(Spacer(1, 0.2*inch))
+
+        # Implementation phases - now fully translatable
+        impl_phases = [
+            T('results_phase_1'),
+            T('results_impl_phase1_1'),
+            T('results_impl_phase1_2'),
+            T('results_impl_phase1_3'),
+            "",
+            T('results_phase_2'),
+            T('results_impl_phase2_1'),
+            T('results_impl_phase2_2'),
+            T('results_impl_phase2_3'),
+            T('results_impl_phase2_4'),
+            "",
+            T('results_phase_3'),
+            T('results_impl_phase3_1'),
+            T('results_impl_phase3_2'),
+            T('results_impl_phase3_3'),
+            T('results_impl_phase3_4')
+        ]
+        
+        for phase in impl_phases:
+            if ":" in phase and ("चरण" in phase or "Phase" in phase or "கட்டம்" in phase):
+                story.append(self._safe_paragraph(f"<b>{phase}</b>", self.styles['CustomBody']))
+            else:
+                story.append(self._safe_paragraph(phase, self.styles['CustomBody']))
+            story.append(Spacer(1, 0.08*inch))
+
+        story.append(PageBreak())
+
+        # Maintenance Recommendations - New Page
+        maint_header = Table([[self._safe_paragraph(T('results_maintenance_recommendations'), self.styles['CustomSubHeading'])]], 
+                            colWidths=[6.5*inch], rowHeights=[0.4*inch])
+        maint_header.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), ColorScheme.DANGER),
+            ('TEXTCOLOR', (0, 0), (-1, -1), ColorScheme.WHITE),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+        ]))
+        story.append(maint_header)
+        story.append(Spacer(1, 0.2*inch))
+
+        # Maintenance schedule - now fully translatable
+        maintenance_schedule = [
+            T('results_monthly_tasks'),
+            T('results_maint_monthly_1'),
+            T('results_maint_monthly_2'),
+            T('results_maint_monthly_3'),
+            "",
+            T('results_quarterly_tasks'),
+            T('results_maint_quarterly_1'),
+            T('results_maint_quarterly_2'),
+            T('results_maint_quarterly_3'),
+            T('results_maint_quarterly_4'),
+            "",
+            T('results_annual_tasks'),
+            T('results_maint_annual_1'),
+            T('results_maint_annual_2'),
+            T('results_maint_annual_3'),
+            T('results_maint_annual_4'),
+            "",
+            f"{T('results_estimated_maintenance_cost')} Rs {design_financial.get('maintenance_cost_annual', 0):,.0f}"
+        ]
+        
+        for task in maintenance_schedule:
+            if task.endswith(":") or T('results_estimated_maintenance_cost') in task:
+                story.append(self._safe_paragraph(f"<b>{task}</b>", self.styles['CustomBody']))
+            else:
+                story.append(self._safe_paragraph(task, self.styles['CustomBody']))
+            story.append(Spacer(1, 0.08*inch))
 
         # Add charts if available with enhanced layout
         if charts:
