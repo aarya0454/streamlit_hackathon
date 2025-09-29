@@ -170,3 +170,4 @@ venv.bak/
 
 !/.streamlit
 .streamlit/secrets.toml
+!/Hydro_Assess_Report_20250927_1837.pdf
