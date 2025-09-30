@@ -9,4 +9,5 @@ fpdf2
 shapely
 geopandas
 requests
+pyproj
 reportlab
